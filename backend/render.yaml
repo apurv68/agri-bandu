@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: agri-bandhu-backend
+    env: docker
+    plan: free
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: APP_NAME
+        value: AgriBandhu
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        value: https://agri-bandhu-backend.onrender.com
+      - key: DB_CONNECTION
+        value: mysql

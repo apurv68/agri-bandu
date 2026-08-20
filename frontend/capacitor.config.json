@@ -1,0 +1,13 @@
+{
+  "appId": "com.agribandhu.app",
+  "appName": "Agri Bandhu",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}
