@@ -1,14 +1,13 @@
 FROM php:8.2-apache
 
-# Install dependencies and extensions
-RUN apt-get update && apt-get install -y \
-    libpng-dev libonig-dev libxml2-dev zip curl unzip \
-    python3 python3-pip python3-pil python3-numpy \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+# Install minimal dependencies fast
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpng-dev libonig-dev libxml2-dev zip unzip \
+    && docker-php-ext-install pdo_mysql mbstring gd \
+    && rm -rf /var/lib/apt/lists/*
 
 # Configure Apache
-RUN a2enmod rewrite
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+RUN a2enmod rewrite && echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 # Set Apache Document Root to Laravel public/ directory
 ENV APACHE_DOCUMENT_ROOT /var/www/html/backend/public
@@ -24,12 +23,8 @@ WORKDIR /var/www/html/backend
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
-# Generate App Key if missing
-RUN php artisan key:generate --force
-
 # Storage permissions
-RUN chown -R www-data:www-data /var/www/html/backend/storage /var/www/html/backend/bootstrap/cache
-RUN chmod -R 775 /var/www/html/backend/storage /var/www/html/backend/bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache && chmod -R 775 storage bootstrap/cache
 
 # Expose Port
 EXPOSE 80 10000
