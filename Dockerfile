@@ -1,9 +1,9 @@
 FROM php:8.2-apache
 
-# Install minimal dependencies fast
+# Install dependencies fast including sqlite3
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpng-dev libonig-dev libxml2-dev zip unzip \
-    && docker-php-ext-install pdo_mysql mbstring gd \
+    libpng-dev libonig-dev libxml2-dev zip unzip sqlite3 libsqlite3-dev \
+    && docker-php-ext-install pdo_mysql pdo_sqlite mbstring gd \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure Apache
@@ -14,7 +14,7 @@ ENV APACHE_DOCUMENT_ROOT /var/www/html/backend/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Working directory & Copy application
+# Copy application files
 WORKDIR /var/www/html
 COPY . /var/www/html
 
@@ -23,8 +23,13 @@ WORKDIR /var/www/html/backend
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
+# Create default sqlite file if needed
+RUN touch database/database.sqlite
+RUN php artisan key:generate --force
+RUN php artisan migrate --force
+
 # Storage permissions
-RUN chown -R www-data:www-data storage bootstrap/cache && chmod -R 775 storage bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache database && chmod -R 777 storage bootstrap/cache database
 
 # Expose Port
 EXPOSE 80 10000

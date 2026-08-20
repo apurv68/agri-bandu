@@ -1,12 +1,12 @@
 import axios from 'axios';
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
 
-// Multi-Tier Database Endpoints (Android Emulator IP + Wi-Fi Local IP + Localtunnel + Cloudflare Tunnel)
+// Multi-Tier Database Endpoints (24/7 Render Cloud Endpoint + Localtunnel + Local IP)
 const ALL_ENDPOINTS = [
+  'https://agri-bandu-2.onrender.com/api', // Live 24/7 Cloud Database Endpoint
+  'https://pretty-banks-lead.loca.lt/api', // Localtunnel Public Endpoint
   'http://10.0.2.2:8000/api', // Android Emulator 0ms Direct PC Host Loopback IP
   'http://10.123.143.94:8000/api', // Local PC Wi-Fi IP
-  'https://pretty-banks-lead.loca.lt/api', // Localtunnel Public Endpoint
-  'https://robin-must-wider-wagon.trycloudflare.com/api', // Cloudflare Cloud Tunnel
   'http://localhost:8000/api'
 ];
 
