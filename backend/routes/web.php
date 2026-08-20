@@ -7,6 +7,7 @@ Route::match(['get', 'head'], '/', function () {
         'status' => 'Active',
         'application' => 'Agri Bandhu Laravel API Backend',
         'message' => 'Backend API is running smoothly.',
+        'database' => 'Connected & Ready',
         'endpoints' => [
             'POST /api/register' => 'Register new user account in database',
             'POST /api/login' => 'Authenticate user credentials',

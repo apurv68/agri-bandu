@@ -23,16 +23,13 @@ WORKDIR /var/www/html/backend
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
-# Create default sqlite file if needed
+# Create default sqlite file with full permissions
 RUN touch database/database.sqlite
-RUN php artisan key:generate --force
-RUN php artisan migrate --force
-
-# Storage permissions
-RUN chown -R www-data:www-data storage bootstrap/cache database && chmod -R 777 storage bootstrap/cache database
+RUN chmod -R 777 storage bootstrap/cache database
+RUN chown -R www-data:www-data storage bootstrap/cache database
 
 # Expose Port
 EXPOSE 80 10000
 
-# Start command binding Apache dynamically to Render's $PORT
-CMD ["sh", "-c", "PORT_USE=${PORT:-80}; sed -i \"s/Listen 80/Listen ${PORT_USE}/g\" /etc/apache2/ports.conf; sed -i \"s/<VirtualHost \\*:80>/<VirtualHost \\*:${PORT_USE}>/g\" /etc/apache2/sites-available/000-default.conf; apache2-foreground"]
+# Start command binding Apache dynamically to Render's $PORT & running migrations
+CMD ["sh", "-c", "cd /var/www/html/backend && php artisan migrate --force; PORT_USE=${PORT:-80}; sed -i \"s/Listen 80/Listen ${PORT_USE}/g\" /etc/apache2/ports.conf; sed -i \"s/<VirtualHost \\*:80>/<VirtualHost \\*:${PORT_USE}>/g\" /etc/apache2/sites-available/000-default.conf; apache2-foreground"]
