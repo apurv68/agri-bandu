@@ -54,10 +54,10 @@ export default function AuthModal({ user, setUser }) {
         setUser(res.user);
         setMessage(res.message || 'Account created successfully! Welcome to Agri Bandhu.');
       } else {
-        setError(res.message || 'Registration failed in database.');
+        setError(res.message || 'Registration failed. Please try again.');
       }
     } catch (err) {
-      setError(err.message || 'Registration failed in database.');
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -124,22 +124,7 @@ export default function AuthModal({ user, setUser }) {
             Signed in as <strong style={{ color: '#34d399' }}>{user.email}</strong> • Role: <strong style={{ color: '#60a5fa' }}>{user.role || 'Farmer'}</strong>
           </p>
 
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.6rem 1.25rem',
-            borderRadius: '20px',
-            background: 'rgba(16, 185, 129, 0.15)',
-            border: '1px solid rgba(52, 211, 153, 0.3)',
-            color: '#34d399',
-            fontSize: '0.88rem',
-            fontWeight: 600,
-            marginBottom: '2rem',
-          }}>
-            <CheckCircle2 size={16} />
-            <span>Database Account Connected & Active</span>
-          </div>
+
 
           <div>
             <button
@@ -465,7 +450,7 @@ export default function AuthModal({ user, setUser }) {
               }}
             >
               <UserPlus size={20} />
-              <span>{loading ? 'Creating Account in Database...' : 'Create Account'}</span>
+              <span>{loading ? 'Creating Account...' : 'Create Account'}</span>
             </button>
           </form>
         )}

@@ -560,7 +560,7 @@ export default function DiseaseDetector({ user }) {
                 style={{ width: '100%', padding: '0.85rem', fontSize: '0.95rem' }}
               >
                 <Save size={18} />
-                <span>{savedSuccess ? 'Scan Saved to XAMPP Database!' : 'Save Scan to History'}</span>
+                <span>{savedSuccess ? 'Scan Saved to History!' : 'Save Scan to History'}</span>
               </button>
 
             </div>
