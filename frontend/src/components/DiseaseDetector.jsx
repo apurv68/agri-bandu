@@ -207,8 +207,7 @@ export default function DiseaseDetector({ user }) {
           scan_id: res.scan_id
         };
         setScanResult(finalResult);
-        await diseaseService.saveScanToHistory(finalResult);
-        setSavedSuccess(true);
+        setSavedSuccess(true); // Already saved by backend scan endpoint
       } else {
         const fallbackResult = {
           crop: 'Crop Foliage',
@@ -223,7 +222,6 @@ export default function DiseaseDetector({ user }) {
           prevention: 'Regular crop scouting once every 5 days.'
         };
         setScanResult(fallbackResult);
-        await diseaseService.saveScanToHistory(fallbackResult);
         setSavedSuccess(true);
       }
     } catch (err) {
@@ -240,7 +238,6 @@ export default function DiseaseDetector({ user }) {
         prevention: 'Regular scouting once every 5 days.'
       };
       setScanResult(fallbackResult);
-      await diseaseService.saveScanToHistory(fallbackResult);
       setSavedSuccess(true);
     } finally {
       setIsScanning(false);
