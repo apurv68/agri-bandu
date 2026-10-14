@@ -536,56 +536,7 @@ DISEASE_METADATA = {
 }
 
 # -------------------------------------------------------------
-# AGRICULTURAL VISION GUARD: Non-Plant Detection
-# -------------------------------------------------------------
-def is_valid_plant_leaf(img):
-    try:
-        rgb_img = img.convert('RGB').resize((128, 128))
-        rgb_arr = np.array(rgb_img, dtype=np.float32) / 255.0
-        r, g, b = rgb_arr[:, :, 0], rgb_arr[:, :, 1], rgb_arr[:, :, 2]
-
-        gray_img = img.convert('L').resize((128, 128))
-        gray_arr = np.array(gray_img, dtype=np.float32) / 255.0
-
-        green_leaf_pixels = (g > r * 1.04) & (g > b * 1.04)
-        yellow_leaf_pixels = (r > 0.38) & (g > 0.35) & (b < 0.35) & (g > r * 0.82)
-        brown_leaf_pixels = (r > 0.28) & (g > 0.18) & (b < 0.25) & (r > g)
-        crop_tissue_signal = float(np.mean(green_leaf_pixels | yellow_leaf_pixels | brown_leaf_pixels))
-
-        blue_sky_water_pixels = (b > r * 1.15) & (b > g * 1.05)
-        blue_sky_water_ratio = float(np.mean(blue_sky_water_pixels))
-
-        top_sky_region = b[:42, :]
-        top_sky_blue_ratio = float(np.mean((top_sky_region > r[:42, :] * 1.1) & (top_sky_region > g[:42, :] * 1.05)))
-
-        dark_night_pixels = (r < 0.12) & (g < 0.12) & (b < 0.15)
-        dark_night_ratio = float(np.mean(dark_night_pixels))
-
-        snow_peak_pixels = (r > 0.85) & (g > 0.85) & (b > 0.85)
-        snow_peak_ratio = float(np.mean(snow_peak_pixels))
-
-        high_white_ratio = float(np.mean(gray_arr > 0.80))
-        high_dark_text_ratio = float(np.mean(gray_arr < 0.25))
-
-        if high_white_ratio > 0.40 and high_dark_text_ratio > 0.04 and crop_tissue_signal < 0.10:
-            return False, "Document / Text Paper Detected"
-
-        if (blue_sky_water_ratio > 0.15 or top_sky_blue_ratio > 0.20 or snow_peak_ratio > 0.08) and crop_tissue_signal < 0.12:
-            return False, "Scenic Landscape / Sky Detected"
-
-        if dark_night_ratio > 0.35 and crop_tissue_signal < 0.10:
-            return False, "Night Landscape / Dark Wallpaper Detected"
-
-        if crop_tissue_signal < 0.07:
-            return False, "Non-Plant / Low Foliage Signal"
-
-        return True, "Valid Leaf Image"
-
-    except Exception:
-        return True, "Valid Leaf Image"
-
-# -------------------------------------------------------------
-# PYTORCH MOBILENETV3 INFERENCE ENGINE
+# PYTORCH MOBILENETV3 INFERENCE ENGINE (Exact final_model.ipynb)
 # -------------------------------------------------------------
 _cached_model = None
 _cached_classes = None
@@ -601,83 +552,126 @@ def get_model_and_classes():
     classes_path = os.path.join(dir_path, 'classes.json')
     if not os.path.exists(classes_path):
         classes_path = os.path.join(dir_path, 'classes (1).json')
-    
+
     with open(classes_path, 'r', encoding='utf-8') as f:
         _cached_classes = json.load(f)
 
-    # Load model (read-only execution)
     import torch
-    model_path = os.path.join(dir_path, 'plant_disease_model_traced.pt.zip')
-    if not os.path.exists(model_path):
-        model_path = os.path.join(dir_path, 'plant_disease_model_traced.pt')
+    import torch.nn as nn
 
-    _cached_model = torch.jit.load(model_path, map_location=torch.device('cpu'))
-    _cached_model.eval()
+    # Load model: Check traced model first, then fallback to mobilenet_v3_small state_dict
+    traced_paths = [
+        os.path.join(dir_path, 'plant_disease_model_traced.pt'),
+        os.path.join(dir_path, 'plant_disease_model_traced.pt.zip'),
+    ]
+    model_loaded = False
+    for t_path in traced_paths:
+        if os.path.exists(t_path):
+            try:
+                _cached_model = torch.jit.load(t_path, map_location=torch.device('cpu'))
+                _cached_model.eval()
+                model_loaded = True
+                break
+            except Exception as e:
+                sys.stderr.write(f"Traced model load notice: {e}\n")
+
+    if not model_loaded:
+        pth_paths = [
+            os.path.join(dir_path, 'plant_disease_mobilenetv3.pth'),
+            os.path.join(dir_path, 'plant_disease_mobilenetv3.pth.zip'),
+        ]
+        from torchvision import models
+        _cached_model = models.mobilenet_v3_small(weights=None)
+        in_features = _cached_model.classifier[3].in_features
+        _cached_model.classifier[3] = nn.Linear(in_features, len(_cached_classes))
+        for p_path in pth_paths:
+            if os.path.exists(p_path):
+                state_dict = torch.load(p_path, map_location=torch.device('cpu'))
+                _cached_model.load_state_dict(state_dict)
+                _cached_model.eval()
+                model_loaded = True
+                break
 
     return _cached_model, _cached_classes
 
-def predict_leaf_disease(image_path):
+def predict_leaf_disease(image_path, min_confidence=60.0):
     if not image_path or not os.path.exists(image_path):
         return {
             'crop': 'Unknown Image',
-            'diseaseName': 'Non-Leaf Image Detected',
+            'diseaseName': 'Image File Not Found',
             'scientificName': 'N/A',
             'status': 'invalid',
-            'confidence': 99.0,
-            'symptoms': ['No plant leaf tissue or green/yellow foliage detected in the image.'],
-            'organicRemedy': 'Please upload or capture a clear photo of an actual crop leaf.',
-            'chemicalRemedy': 'N/A - Non-plant image.',
-            'prevention': 'Ensure proper lighting and focus on the plant leaf.',
-            'engine': 'Agri Bandhu Leaf Validation Guard'
+            'confidence': 0.0,
+            'symptoms': ['The specified leaf image path does not exist or was not uploaded.'],
+            'organicRemedy': 'Please capture or upload a clear photo of an actual crop leaf.',
+            'chemicalRemedy': 'N/A',
+            'prevention': 'Ensure image upload is completed before analysis.',
+            'engine': 'Agri Bandhu MobileNetV3 AI Engine'
         }
 
     try:
-        img = Image.open(image_path)
-        is_leaf, reason = is_valid_plant_leaf(img)
+        img = Image.open(image_path).convert('RGB')
 
-        if not is_leaf:
-            return {
-                'crop': 'Non-Plant / Scenic Object',
-                'diseaseName': 'Non-Leaf Image Detected',
-                'scientificName': reason,
-                'status': 'invalid',
-                'confidence': 99.2,
-                'symptoms': [
-                    f'The uploaded photo was identified as a non-plant image ({reason}).',
-                    'No crop foliage or agricultural leaf tissue signals were detected.'
-                ],
-                'organicRemedy': 'Please upload or capture a clear close-up photo of an actual plant/crop leaf.',
-                'chemicalRemedy': 'N/A - Non-plant image.',
-                'prevention': 'Capture a well-lit close-up shot of the affected leaf.',
-                'engine': 'Agri Bandhu Leaf Validation Guard'
-            }
-
-        # Preprocess for PyTorch MobileNetV3 (Resize 224x224, standard ImageNet normalization)
-        import torch
-        img_rgb = img.convert('RGB').resize((224, 224))
-        arr = np.array(img_rgb, dtype=np.float32) / 255.0
-        
-        # Normalize (mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        # Exact Bilinear Transform matching torchvision.transforms from final_model.ipynb
+        # Resize to (224, 224) -> ToTensor (/ 255.0) -> Normalize ImageNet mean & std
+        img_resized = img.resize((224, 224), Image.Resampling.BILINEAR)
+        arr = np.array(img_resized, dtype=np.float32) / 255.0
         mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
         std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
         arr = (arr - mean) / std
 
-        # Shape: (1, 3, 224, 224)
-        tensor = torch.tensor(arr.transpose(2, 0, 1), dtype=torch.float32).unsqueeze(0)
+        import torch
+        tensor = torch.from_numpy(arr.transpose(2, 0, 1)).unsqueeze(0).float()
 
-        # Run model inference
+        # Run pure neural network inference
         model, classes = get_model_and_classes()
         with torch.no_grad():
             outputs = model(tensor)
-            probs = torch.softmax(outputs, dim=1)[0]
-            top_prob, top_idx = torch.max(probs, dim=0)
-            class_name = classes[top_idx.item()]
-            confidence = float(top_prob.item() * 100)
+            probs = torch.nn.functional.softmax(outputs, dim=1)
+            top_probs, top_indices = torch.topk(probs, 3, dim=1)
 
-        # Retrieve detailed metadata
+        # Real model accuracy (NO clamping or artificial heuristics)
+        top_prob = round(top_probs[0][0].item() * 100.0, 2)
+        top_idx = top_indices[0][0].item()
+        class_name = classes[top_idx]
+
+        # Top 3 Candidates
+        candidates = []
+        for i in range(min(3, len(top_indices[0]))):
+            idx = top_indices[0][i].item()
+            p = round(top_probs[0][i].item() * 100.0, 2)
+            raw_cls = classes[idx]
+            lbl = raw_cls.replace("___", " - ").replace("_", " ")
+            candidates.append({
+                "label": lbl,
+                "raw_class": raw_cls,
+                "confidence": p
+            })
+
+        # Minimum confidence threshold (60.0% matching final_model.ipynb)
+        if top_prob < min_confidence:
+            return {
+                'crop': 'Inconclusive',
+                'diseaseName': 'No leaf/plant detected or unrecognized plant image',
+                'scientificName': f'Inconclusive (Confidence: {top_prob:.2f}% < {min_confidence:.0f}%)',
+                'status': 'invalid',
+                'confidence': top_prob,
+                'is_low_confidence': True,
+                'predicted_class': class_name,
+                'candidates': candidates,
+                'symptoms': [
+                    f'Confidence ({top_prob:.2f}%) is below the {min_confidence:.0f}% certainty threshold.',
+                    'The photo does not clearly match any recognized plant disease leaf pattern.'
+                ],
+                'organicRemedy': 'Please upload a clear, focused photo of a single plant leaf filling the frame.',
+                'chemicalRemedy': 'N/A - Image not recognized as a plant disease.',
+                'prevention': 'Capture a well-lit close-up shot of the affected crop leaf without hands or background clutter.',
+                'engine': 'Agri Bandhu MobileNetV3 AI Engine (PlantVillage 38 Classes)'
+            }
+
+        # Retrieve detailed agricultural metadata
         metadata = DISEASE_METADATA.get(class_name)
         if not metadata:
-            # Fallback parsing if unmapped
             parts = class_name.split('___')
             crop_name = parts[0].replace('_', ' ')
             disease_name = parts[1].replace('_', ' ') if len(parts) > 1 else 'Unknown'
@@ -694,23 +688,26 @@ def predict_leaf_disease(image_path):
             }
 
         result = metadata.copy()
-        result['confidence'] = round(min(99.6, max(75.0, confidence)), 1)
+        result['confidence'] = top_prob  # TRUE UNCLAMPED CONFIDENCE
         result['predicted_class'] = class_name
+        result['candidates'] = candidates
         result['engine'] = 'PyTorch MobileNetV3 AI Engine (PlantVillage 38 Classes)'
         return result
 
     except Exception as e:
+        import traceback
+        sys.stderr.write(f"Inference error: {traceback.format_exc()}\n")
         return {
-            'crop': 'Crop Leaf',
-            'diseaseName': 'Healthy Foliage',
-            'scientificName': 'Pathogen-Free Active Tissue',
-            'status': 'healthy',
-            'confidence': 95.0,
-            'symptoms': ['Image processed. General plant vitality detected.'],
-            'organicRemedy': 'Maintain standard organic fertilization and watering.',
-            'chemicalRemedy': 'None required.',
-            'prevention': 'Regular scouting every 5-7 days.',
-            'engine': 'Agri Bandhu Leaf Engine Fallback'
+            'crop': 'Processing Error',
+            'diseaseName': 'Leaf Image Processing Error',
+            'scientificName': str(e),
+            'status': 'invalid',
+            'confidence': 0.0,
+            'symptoms': [f'Model inference error: {str(e)}'],
+            'organicRemedy': 'Please try again with a valid JPEG or PNG photo.',
+            'chemicalRemedy': 'N/A',
+            'prevention': 'Ensure proper image file format.',
+            'engine': 'Agri Bandhu AI Engine Error'
         }
 
 if __name__ == '__main__':
