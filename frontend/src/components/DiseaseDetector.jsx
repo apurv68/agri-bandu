@@ -207,38 +207,34 @@ export default function DiseaseDetector({ user }) {
           scan_id: res.scan_id
         };
         setScanResult(finalResult);
-        setSavedSuccess(true); // Already saved by backend scan endpoint
-      } else {
-        const fallbackResult = {
-          crop: 'Crop Foliage',
-          diseaseName: 'Healthy Foliage',
-          scientificName: 'Plant Tissue',
-          status: 'healthy',
-          confidence: 97.5,
-          image: compressed,
-          symptoms: ['Healthy plant leaf tissue detected with optimal chlorophyll levels.'],
-          organicRemedy: 'Maintain standard balanced irrigation and bio-fertilizer care (Azotobacter & PSB).',
-          chemicalRemedy: 'No chemical fungicide required. Continue standard plant care.',
-          prevention: 'Regular crop scouting once every 5 days.'
-        };
-        setScanResult(fallbackResult);
         setSavedSuccess(true);
+      } else {
+        setScanResult({
+          crop: 'Network / Server Error',
+          diseaseName: 'Cloud Server Did Not Respond',
+          scientificName: 'Please Retry',
+          status: 'invalid',
+          confidence: 0,
+          image: compressed,
+          symptoms: ['Could not connect to the Agri Bandhu cloud backend. Please verify your internet connection.'],
+          organicRemedy: 'Ensure your phone has active internet access and retry the scan.',
+          chemicalRemedy: 'N/A',
+          prevention: 'Check Wi-Fi or mobile data connection.'
+        });
       }
     } catch (err) {
-      const fallbackResult = {
-        crop: 'Crop Foliage',
-        diseaseName: 'Foliage Diagnostics',
-        scientificName: 'Plant Tissue',
-        status: 'healthy',
-        confidence: 96.0,
+      setScanResult({
+        crop: 'Scan Error',
+        diseaseName: 'Failed to Process Image',
+        scientificName: 'Error Connecting',
+        status: 'invalid',
+        confidence: 0,
         image: imgSrc,
-        symptoms: ['Foliage tissue scan complete.'],
-        organicRemedy: 'Maintain regular organic crop care.',
-        chemicalRemedy: 'No chemical treatment required.',
-        prevention: 'Regular scouting once every 5 days.'
-      };
-      setScanResult(fallbackResult);
-      setSavedSuccess(true);
+        symptoms: ['An unexpected error occurred while communicating with the server.'],
+        organicRemedy: 'Please try again in a few moments.',
+        chemicalRemedy: 'N/A',
+        prevention: 'Ensure internet connection is active.'
+      });
     } finally {
       setIsScanning(false);
     }
@@ -461,15 +457,30 @@ export default function DiseaseDetector({ user }) {
               </div>
 
               {/* Confidence Score Bar */}
-              <div style={{ marginBottom: '1.5rem', background: 'rgba(0, 0, 0, 0.3)', padding: '1rem', borderRadius: '14px' }}>
+              <div style={{ marginBottom: '1rem', background: 'rgba(0, 0, 0, 0.3)', padding: '1rem', borderRadius: '14px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#9ca3af', marginBottom: '0.4rem' }}>
                   <span>AI Detection Confidence</span>
                   <span style={{ color: '#34d399', fontWeight: 800 }}>{scanResult.confidence}%</span>
                 </div>
                 <div style={{ width: '100%', height: '8px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '999px', overflow: 'hidden' }}>
-                  <div style={{ width: `${scanResult.confidence}%`, height: '100%', background: 'linear-gradient(90deg, #10b981, #34d399)', borderRadius: '999px' }} />
+                  <div style={{ width: `${Math.min(100, Math.max(0, scanResult.confidence))}%`, height: '100%', background: 'linear-gradient(90deg, #10b981, #34d399)', borderRadius: '999px' }} />
                 </div>
               </div>
+
+              {/* Top 3 Predictions from Model */}
+              {scanResult.candidates && scanResult.candidates.length > 0 && (
+                <div style={{ marginBottom: '1.5rem', background: 'rgba(0, 0, 0, 0.25)', padding: '0.85rem 1rem', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                  <div style={{ fontSize: '0.78rem', color: '#9ca3af', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '0.04em' }}>
+                    Top Model Candidates:
+                  </div>
+                  {scanResult.candidates.map((cand, cIdx) => (
+                    <div key={cIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', padding: '0.35rem 0', color: cIdx === 0 ? '#34d399' : '#d1d5db', borderBottom: cIdx < scanResult.candidates.length - 1 ? '1px solid rgba(255, 255, 255, 0.05)' : 'none' }}>
+                      <span style={{ fontWeight: cIdx === 0 ? 700 : 400 }}>{cIdx + 1}. {cand.label}</span>
+                      <span style={{ fontWeight: 800, color: cIdx === 0 ? '#34d399' : '#9ca3af' }}>{cand.confidence}%</span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Detected Symptoms List */}
               <div style={{ marginBottom: '1.5rem' }}>
