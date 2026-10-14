@@ -1,10 +1,12 @@
 FROM php:8.2-apache
 
-# Install dependencies (including PostgreSQL client)
+# Install dependencies (including PostgreSQL client and Python PyTorch for ML inference)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpng-dev libonig-dev libxml2-dev zip unzip \
     sqlite3 libsqlite3-dev \
     libpq-dev \
+    python3 python3-pip python3-pil python3-numpy \
+    && pip install --no-cache-dir --break-system-packages torch --index-url https://download.pytorch.org/whl/cpu \
     && docker-php-ext-install pdo_mysql pdo_sqlite pdo_pgsql mbstring gd \
     && rm -rf /var/lib/apt/lists/*
 
@@ -29,11 +31,12 @@ RUN composer install --no-dev --optimize-autoloader
 RUN cp .env.production .env
 
 # Set permissions
+RUN touch /var/www/html/backend/database/database.sqlite
 RUN chown -R www-data:www-data /var/www/html/backend
-RUN chmod -R 777 storage bootstrap/cache
+RUN chmod -R 777 storage bootstrap/cache database
 
 # Expose Port
 EXPOSE 80 10000
 
-# Start: inject DB password from Render env var, run migrations, then launch Apache
-CMD ["sh", "-c", "cd /var/www/html/backend && sed -i \"s|\\${AIVEN_DB_PASSWORD}|${AIVEN_DB_PASSWORD}|g\" .env && php artisan migrate --force && PORT_USE=${PORT:-80} && sed -i \"s/Listen 80/Listen ${PORT_USE}/g\" /etc/apache2/ports.conf && sed -i \"s/<VirtualHost \\*:80>/<VirtualHost \\*:${PORT_USE}>/g\" /etc/apache2/sites-available/000-default.conf && apache2-foreground"]
+# Start: prepare SQLite, run migrations safely, and launch Apache
+CMD ["sh", "-c", "cd /var/www/html/backend && touch database/database.sqlite && chmod 666 database/database.sqlite && chmod 777 database && php artisan migrate --force || true && PORT_USE=${PORT:-80} && sed -i \"s/Listen 80/Listen ${PORT_USE}/g\" /etc/apache2/ports.conf && sed -i \"s/<VirtualHost \\*:80>/<VirtualHost \\*:${PORT_USE}>/g\" /etc/apache2/sites-available/000-default.conf && apache2-foreground"]

@@ -73,9 +73,12 @@ class DiseaseController extends Controller
     {
         try {
             $pythonExe = 'C:\\Users\\apurv\\AppData\\Local\\Programs\\Python\\Python312\\python.exe';
+            if (!File::exists($pythonExe)) {
+                $pythonExe = 'python3';
+            }
             $script = base_path('ml_model/predict.py');
 
-            if (File::exists($pythonExe) && File::exists($script) && !empty($imageLocalPath) && File::exists($imageLocalPath)) {
+            if (File::exists($script) && !empty($imageLocalPath) && File::exists($imageLocalPath)) {
                 $cmd = escapeshellcmd("$pythonExe \"$script\" \"$imageLocalPath\"");
                 $output = shell_exec($cmd);
                 if ($output) {
@@ -100,7 +103,7 @@ class DiseaseController extends Controller
             ],
             'organicRemedy' => 'Please upload or capture a clear photo of an actual plant leaf.',
             'chemicalRemedy' => 'N/A - Non-plant image.',
-            'engine' => 'TensorFlow / Keras Leaf Validation Guard v2.5',
+            'engine' => 'PyTorch MobileNetV3 AI Engine',
         ];
     }
 
@@ -129,7 +132,7 @@ class DiseaseController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'TensorFlow CNN ML Model predicted leaf disease & saved to database!',
+            'message' => 'AI ML Model predicted leaf disease & saved to database!',
             'scan_id' => $scanRecord->id,
             'image_url' => $imageUrl,
             'diagnosis' => array_merge($mlDiagnosis, ['image_url' => $imageUrl]),
@@ -160,7 +163,7 @@ class DiseaseController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'TensorFlow CNN ML Prediction saved to database!',
+                'message' => 'AI ML Model prediction saved to database!',
                 'scan' => $scan
             ], 200);
         } catch (\Exception $e) {
