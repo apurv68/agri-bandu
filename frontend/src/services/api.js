@@ -38,7 +38,10 @@ const callBackendDatabase = async (method, uri, data = null, headers = {}) => {
       requestHeaders['Authorization'] = `Bearer ${authToken}`;
     }
 
-    // Attempt 1: Native CapacitorHttp for Android Mobile Native Bridge (Fast 4s Failover)
+    const isScanRequest = uri.includes('/disease/scan') || uri.includes('/disease');
+    const requestTimeout = isScanRequest ? 60000 : 20000;
+
+    // Attempt 1: Native CapacitorHttp for Android Mobile Native Bridge
     if (Capacitor.isNativePlatform()) {
       try {
         const nativeRes = await CapacitorHttp.request({
@@ -46,8 +49,8 @@ const callBackendDatabase = async (method, uri, data = null, headers = {}) => {
           url: fullUrl,
           headers: requestHeaders,
           data: data,
-          connectTimeout: 4000,
-          readTimeout: 10000,
+          connectTimeout: 15000,
+          readTimeout: requestTimeout,
         });
 
         if (nativeRes.status >= 200 && nativeRes.status < 300) {
@@ -73,7 +76,7 @@ const callBackendDatabase = async (method, uri, data = null, headers = {}) => {
       const client = axios.create({
         baseURL: baseUrl,
         headers: requestHeaders,
-        timeout: 4000,
+        timeout: requestTimeout,
       });
 
       const response = await client({ method, url: uri, data });
