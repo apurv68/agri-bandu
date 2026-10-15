@@ -337,10 +337,11 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = () => {
-        const preview = reader.result;
-        setSelectedImage(preview);
-        runAnalysis(preview, file);
+      reader.onload = async () => {
+        const raw = reader.result;
+        setSelectedImage(raw);
+        const optimized = await compressImage(raw);
+        runAnalysis(optimized);
       };
       reader.readAsDataURL(file);
     }
@@ -394,21 +395,13 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
     }
   };
 
-  const runAnalysis = async (imgSrc, fileObj = null) => {
+  const runAnalysis = async (imgSrc) => {
     setIsScanning(true);
     setScanResult(null);
     setSavedSuccess(false);
 
     try {
-      let res = null;
-      if (fileObj) {
-        // High fidelity upload of original user file directly as FormData
-        res = await diseaseService.scanLeaf(null, fileObj);
-      } else {
-        // Camera viewfinder capture or base64 photo
-        const optimized = await compressImage(imgSrc);
-        res = await diseaseService.scanLeaf(optimized);
-      }
+      const res = await diseaseService.scanLeaf(imgSrc);
 
       if (res && res.diagnosis) {
         const predictedClass = res.diagnosis.predicted_class || '';
@@ -452,6 +445,7 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
       setIsScanning(false);
     }
   };
+
 
 
   // Severity calculator based on status & confidence

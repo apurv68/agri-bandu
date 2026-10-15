@@ -222,20 +222,33 @@ export const authService = {
 export const diseaseService = {
   async scanLeaf(imageData, fileObj = null) {
     try {
-      if (fileObj) {
+      // In native Android APK, CapacitorHttp does NOT support browser FormData objects.
+      // Therefore, always use base64 JSON payload on native Android.
+      if (fileObj && !Capacitor.isNativePlatform()) {
         const formData = new FormData();
         formData.append('image', fileObj);
         const response = await callBackendDatabase('POST', '/disease/scan', formData);
-
         return response.data;
       }
-      const response = await callBackendDatabase('POST', '/disease/scan', { image: imageData });
+
+      let payload = imageData;
+      if (!payload && fileObj) {
+        payload = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(fileObj);
+        });
+      }
+
+      const response = await callBackendDatabase('POST', '/disease/scan', { image: payload });
       return response.data;
     } catch (error) {
       console.warn('Backend scan error:', error);
       return null;
     }
   },
+
 
   async saveScanToHistory(scanResult) {
     try {
