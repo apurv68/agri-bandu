@@ -56,20 +56,20 @@ export default function App() {
       {/* Modern Footer */}
       <footer style={{
         marginTop: 'auto',
-        borderTop: '1px solid rgba(52, 211, 153, 0.15)',
-        background: 'rgba(10, 17, 14, 0.95)',
-        padding: '1.75rem 1.5rem',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        background: '#0e2a1b',
+        padding: '1.5rem 1.5rem',
         textAlign: 'center',
-        color: '#9ca3af',
+        color: '#bbf7d0',
         fontSize: '0.88rem',
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f3f4f6', fontWeight: 600 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff', fontWeight: 600 }}>
             <img src="/agri-logo.png" alt="Logo" style={{ width: '22px', height: '22px', borderRadius: '6px' }} />
             <span>Agri Bandhu (कृषि बंधु) - Empowering Modern Farming</span>
           </div>
 
-          <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+          <div style={{ fontSize: '0.8rem', color: '#a7f3d0' }}>
             Built with <Heart size={13} color="#ef4444" style={{ display: 'inline', margin: '0 2px' }} /> for Agricultural Innovation
           </div>
         </div>

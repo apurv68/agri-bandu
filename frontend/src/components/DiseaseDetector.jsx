@@ -474,12 +474,14 @@ export default function DiseaseDetector({ user }) {
   return (
     <div style={{ maxWidth: '1280px', margin: '1rem auto 3rem auto', padding: '0 1rem' }}>
       
-      {/* Top Header Card - Matching Mobile & Web Screens */}
-      <div className="glass-panel" style={{
-        padding: '1.25rem 1.5rem',
-        marginBottom: '1.5rem',
-        background: 'linear-gradient(135deg, rgba(16, 28, 23, 0.95) 0%, rgba(10, 20, 16, 0.98) 100%)',
-        border: '1px solid rgba(52, 211, 153, 0.25)',
+      {/* Top Header Card - Deep Agricultural Forest Green from Screenshot 1 */}
+      <div style={{
+        padding: '1.25rem 1.75rem',
+        marginBottom: '1.25rem',
+        background: '#123924',
+        borderRadius: '20px',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        boxShadow: '0 4px 20px rgba(18, 57, 36, 0.15)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -489,27 +491,28 @@ export default function DiseaseDetector({ user }) {
         {/* Weather & Location Chip */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '0.45rem 0.9rem',
+            background: 'rgba(255, 255, 255, 0.15)',
+            border: '1px solid rgba(255, 255, 255, 0.25)',
+            padding: '0.45rem 1rem',
             borderRadius: '999px',
             fontSize: '0.85rem',
-            color: '#e5e7eb',
+            color: '#ffffff',
+            fontWeight: 600,
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem'
           }}>
-            <Sun size={16} color="#fbbf24" />
+            <Sun size={17} color="#fde047" />
             <span>Noida · 28°C · Clear</span>
           </div>
 
           <div style={{
-            background: 'rgba(16, 185, 129, 0.15)',
-            border: '1px solid rgba(52, 211, 153, 0.3)',
-            padding: '0.45rem 0.8rem',
+            background: 'rgba(255, 255, 255, 0.15)',
+            border: '1px solid rgba(255, 255, 255, 0.25)',
+            padding: '0.45rem 0.9rem',
             borderRadius: '999px',
-            fontSize: '0.8rem',
-            color: '#34d399',
+            fontSize: '0.82rem',
+            color: '#bbf7d0',
             fontWeight: 700
           }}>
             {user?.name ? user.name : 'Farmer Partner'}
@@ -520,53 +523,56 @@ export default function DiseaseDetector({ user }) {
         <button
           onClick={() => setLang(lang === 'hi' ? 'en' : 'hi')}
           style={{
-            background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+            background: 'rgba(255, 255, 255, 0.2)',
             color: '#ffffff',
-            border: '1px solid rgba(52, 211, 153, 0.4)',
-            padding: '0.45rem 1rem',
+            border: '1px solid rgba(255, 255, 255, 0.35)',
+            padding: '0.45rem 1.1rem',
             borderRadius: '999px',
             fontWeight: 800,
-            fontSize: '0.9rem',
+            fontSize: '0.92rem',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             gap: '0.4rem',
-            boxShadow: '0 2px 10px rgba(16, 185, 129, 0.3)'
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+            transition: 'all 0.2s ease'
           }}
         >
-          <span style={{ fontSize: '1.05rem' }}>{lang === 'hi' ? 'अ' : 'A'}</span>
-          <span style={{ fontSize: '0.78rem', opacity: 0.85 }}>/ {lang === 'hi' ? 'English' : 'हिंदी'}</span>
+          <span style={{ fontSize: '1.1rem', fontWeight: 900 }}>{lang === 'hi' ? 'अ' : 'A'}</span>
+          <span style={{ fontSize: '0.8rem', opacity: 0.9 }}>/ {lang === 'hi' ? 'English' : 'हिंदी'}</span>
         </button>
       </div>
 
-      {/* Seasonal Alert Banner (from Screenshot 2) */}
+      {/* Seasonal Alert Banner (from Screenshot 2 - Warm Amber Pill) */}
       <div style={{
-        background: 'linear-gradient(90deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.08) 100%)',
-        border: '1px solid rgba(245, 158, 11, 0.35)',
+        background: '#fffbeb',
+        border: '1px solid #fde68a',
         borderRadius: '16px',
-        padding: '0.9rem 1.25rem',
-        marginBottom: '1.75rem',
+        padding: '0.9rem 1.35rem',
+        marginBottom: '1.5rem',
         display: 'flex',
         alignItems: 'center',
-        gap: '0.85rem'
+        gap: '0.85rem',
+        boxShadow: '0 2px 10px rgba(245, 158, 11, 0.08)'
       }}>
         <div style={{
           width: '36px',
           height: '36px',
           borderRadius: '10px',
-          background: 'rgba(245, 158, 11, 0.25)',
+          background: '#fef3c7',
+          border: '1px solid #fde68a',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0
         }}>
-          <AlertTriangle size={20} color="#fbbf24" />
+          <AlertTriangle size={20} color="#d97706" />
         </div>
         <div>
-          <div style={{ color: '#fbbf24', fontWeight: 800, fontSize: '0.9rem', letterSpacing: '0.02em' }}>
+          <div style={{ color: '#b45309', fontWeight: 800, fontSize: '0.92rem', letterSpacing: '0.01em' }}>
             {t.alertTitle}: Early/Late Blight (झुलसा रोग)
           </div>
-          <div style={{ color: '#d1d5db', fontSize: '0.83rem', marginTop: '0.1rem' }}>
+          <div style={{ color: '#92400e', fontSize: '0.84rem', marginTop: '0.1rem' }}>
             {t.alertText}
           </div>
         </div>
@@ -581,10 +587,10 @@ export default function DiseaseDetector({ user }) {
             
             {/* Header Greeting */}
             <div style={{ marginBottom: '1.25rem' }}>
-              <h2 style={{ fontSize: '1.6rem', color: '#ffffff', fontWeight: 800, margin: 0 }}>
+              <h2 style={{ fontSize: '1.5rem', color: '#14281d', fontWeight: 800, margin: 0 }}>
                 {t.welcome}
               </h2>
-              <p style={{ color: '#9ca3af', fontSize: '0.88rem', marginTop: '0.2rem' }}>
+              <p style={{ color: '#4b5563', fontSize: '0.88rem', marginTop: '0.2rem' }}>
                 {t.greetingSub}
               </p>
             </div>
@@ -594,13 +600,13 @@ export default function DiseaseDetector({ user }) {
               position: 'relative',
               borderRadius: '24px',
               overflow: 'hidden',
-              background: '#050a08',
+              background: cameraActive || selectedImage ? '#111613' : '#f8faf6',
               height: '380px',
-              border: '1px solid rgba(52, 211, 153, 0.35)',
+              border: cameraActive || selectedImage ? '2px solid rgba(18, 57, 36, 0.4)' : '2px dashed #bbf7d0',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.6)'
+              boxShadow: cameraActive || selectedImage ? '0 8px 30px rgba(0, 0, 0, 0.4)' : 'none'
             }}>
               
               {cameraActive ? (
@@ -827,20 +833,20 @@ export default function DiseaseDetector({ user }) {
                     width: '74px',
                     height: '74px',
                     borderRadius: '50%',
-                    background: 'rgba(16, 185, 129, 0.15)',
-                    border: '1px solid rgba(52, 211, 153, 0.35)',
+                    background: '#ecfdf5',
+                    border: '1px solid #a7f3d0',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginBottom: '1rem',
-                    boxShadow: '0 0 25px rgba(16, 185, 129, 0.25)'
+                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.15)'
                   }}>
-                    <Camera size={34} color="#34d399" />
+                    <Camera size={34} color="#059669" />
                   </div>
-                  <h3 style={{ color: '#ffffff', fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>
+                  <h3 style={{ color: '#14281d', fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>
                     {t.tapToScan}
                   </h3>
-                  <p style={{ color: '#9ca3af', fontSize: '0.85rem', marginTop: '0.4rem', maxWidth: '280px' }}>
+                  <p style={{ color: '#4b5563', fontSize: '0.85rem', marginTop: '0.4rem', maxWidth: '280px' }}>
                     {t.supportsFormats}
                   </p>
                 </div>
@@ -881,10 +887,10 @@ export default function DiseaseDetector({ user }) {
             {/* Recent Plots (मेरे खेत) Section from Screenshot 2 */}
             <div style={{ marginTop: '2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                <h4 style={{ fontSize: '0.95rem', color: '#f3f4f6', fontWeight: 700, margin: 0 }}>
+                <h4 style={{ fontSize: '1rem', color: '#14281d', fontWeight: 800, margin: 0 }}>
                   {t.recentPlots}
                 </h4>
-                <span style={{ fontSize: '0.75rem', color: '#34d399', cursor: 'pointer', fontWeight: 600 }}>
+                <span style={{ fontSize: '0.8rem', color: '#15803d', cursor: 'pointer', fontWeight: 700 }}>
                   View All Plots →
                 </span>
               </div>
@@ -894,19 +900,30 @@ export default function DiseaseDetector({ user }) {
                 <div 
                   onClick={() => handleSelectSample(SAMPLE_LEAF_PRESETS[0])}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: '#ffffff',
+                    border: '1px solid #e5eae1',
                     borderRadius: '16px',
                     padding: '0.75rem',
                     cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(18, 57, 36, 0.05)',
                     transition: 'all 0.25s ease'
                   }}
                 >
                   <img src="/images/crops/tomato.png" alt="Tomato" style={{ width: '100%', height: '80px', objectFit: 'cover', borderRadius: '10px' }} />
-                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#f3f4f6', marginTop: '0.5rem' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#14281d', marginTop: '0.5rem' }}>
                     {t.plot1Title}
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: '#fbbf24', marginTop: '0.1rem' }}>
+                  <div style={{
+                    fontSize: '0.72rem',
+                    background: '#fffbeb',
+                    color: '#b45309',
+                    border: '1px solid #fde68a',
+                    padding: '0.15rem 0.5rem',
+                    borderRadius: '999px',
+                    display: 'inline-block',
+                    marginTop: '0.25rem',
+                    fontWeight: 700
+                  }}>
                     {t.plot1Status}
                   </div>
                 </div>
@@ -915,19 +932,30 @@ export default function DiseaseDetector({ user }) {
                 <div 
                   onClick={() => handleSelectSample(SAMPLE_LEAF_PRESETS[1])}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: '#ffffff',
+                    border: '1px solid #e5eae1',
                     borderRadius: '16px',
                     padding: '0.75rem',
                     cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(18, 57, 36, 0.05)',
                     transition: 'all 0.25s ease'
                   }}
                 >
                   <img src="https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=600&q=80" alt="Potato" style={{ width: '100%', height: '80px', objectFit: 'cover', borderRadius: '10px' }} />
-                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#f3f4f6', marginTop: '0.5rem' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#14281d', marginTop: '0.5rem' }}>
                     {t.plot2Title}
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: '#34d399', marginTop: '0.1rem' }}>
+                  <div style={{
+                    fontSize: '0.72rem',
+                    background: '#ecfdf5',
+                    color: '#059669',
+                    border: '1px solid #a7f3d0',
+                    padding: '0.15rem 0.5rem',
+                    borderRadius: '999px',
+                    display: 'inline-block',
+                    marginTop: '0.25rem',
+                    fontWeight: 700
+                  }}>
                     {t.plot2Status}
                   </div>
                 </div>
@@ -936,19 +964,30 @@ export default function DiseaseDetector({ user }) {
                 <div 
                   onClick={() => handleSelectSample(SAMPLE_LEAF_PRESETS[2])}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: '#ffffff',
+                    border: '1px solid #e5eae1',
                     borderRadius: '16px',
                     padding: '0.75rem',
                     cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(18, 57, 36, 0.05)',
                     transition: 'all 0.25s ease'
                   }}
                 >
                   <img src="https://images.unsplash.com/photo-1601593346740-925612772716?auto=format&fit=crop&w=600&q=80" alt="Corn" style={{ width: '100%', height: '80px', objectFit: 'cover', borderRadius: '10px' }} />
-                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#f3f4f6', marginTop: '0.5rem' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#14281d', marginTop: '0.5rem' }}>
                     {t.plot3Title}
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: '#f59e0b', marginTop: '0.1rem' }}>
+                  <div style={{
+                    fontSize: '0.72rem',
+                    background: '#fffbeb',
+                    color: '#d97706',
+                    border: '1px solid #fde68a',
+                    padding: '0.15rem 0.5rem',
+                    borderRadius: '999px',
+                    display: 'inline-block',
+                    marginTop: '0.25rem',
+                    fontWeight: 700
+                  }}>
                     {t.plot3Status}
                   </div>
                 </div>
@@ -970,18 +1009,18 @@ export default function DiseaseDetector({ user }) {
                 justifyContent: 'space-between',
                 flexWrap: 'wrap',
                 gap: '0.75rem',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                borderBottom: '1px solid #e5eae1',
                 paddingBottom: '1.25rem',
                 marginBottom: '1.25rem'
               }}>
                 <div>
-                  <div style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#15803d', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     {scanResult.crop} Leaf Pathology
                   </div>
-                  <h3 style={{ fontSize: '1.5rem', color: '#ffffff', fontWeight: 800, margin: '0.2rem 0' }}>
+                  <h3 style={{ fontSize: '1.55rem', color: '#14281d', fontWeight: 800, margin: '0.2rem 0' }}>
                     {scanResult.diseaseName || scanResult.disease_name}
                   </h3>
-                  <div style={{ fontSize: '0.85rem', color: '#9ca3af', fontStyle: 'italic' }}>
+                  <div style={{ fontSize: '0.86rem', color: '#6b7280', fontStyle: 'italic' }}>
                     {scanResult.scientificName || scanResult.scientific_name}
                   </div>
                 </div>
@@ -990,10 +1029,10 @@ export default function DiseaseDetector({ user }) {
                 <button
                   onClick={() => toggleAudioSpeech()}
                   style={{
-                    background: isPlayingAudio ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
-                    border: `1px solid ${isPlayingAudio ? 'rgba(239, 68, 68, 0.5)' : 'rgba(52, 211, 153, 0.4)'}`,
-                    color: isPlayingAudio ? '#f87171' : '#34d399',
-                    padding: '0.5rem 1rem',
+                    background: isPlayingAudio ? '#fef2f2' : '#f0fdf4',
+                    border: `1px solid ${isPlayingAudio ? '#fecaca' : '#bbf7d0'}`,
+                    color: isPlayingAudio ? '#dc2626' : '#15803d',
+                    padding: '0.5rem 1.1rem',
                     borderRadius: '999px',
                     fontWeight: 700,
                     fontSize: '0.85rem',
@@ -1001,7 +1040,7 @@ export default function DiseaseDetector({ user }) {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.45rem',
-                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.3)'
+                    boxShadow: '0 2px 8px rgba(22, 101, 52, 0.08)'
                   }}
                 >
                   {isPlayingAudio ? <VolumeX size={16} /> : <Volume2 size={16} />}
@@ -1011,13 +1050,13 @@ export default function DiseaseDetector({ user }) {
 
               {/* Severity Meter (from Screenshot 1 & 2) */}
               <div style={{ marginBottom: '1.25rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#34d399', fontWeight: 700 }}>
-                    <CheckCircle size={15} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.84rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#15803d', fontWeight: 700 }}>
+                    <CheckCircle size={16} />
                     <span>{t.symptomMatch}</span>
                   </div>
-                  <div style={{ color: '#9ca3af', fontSize: '0.8rem' }}>
-                    AI Confidence: <strong style={{ color: '#34d399' }}>{scanResult.confidence}%</strong>
+                  <div style={{ color: '#6b7280', fontSize: '0.82rem' }}>
+                    AI Confidence: <strong style={{ color: '#15803d' }}>{scanResult.confidence}%</strong>
                   </div>
                 </div>
 
@@ -1037,72 +1076,74 @@ export default function DiseaseDetector({ user }) {
 
               {/* Side-by-Side Leaf Comparison Card (Matching Screenshot 1 & 2) */}
               <div style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                background: '#f8faf6',
+                border: '1px solid #e2ebd8',
                 borderRadius: '18px',
-                padding: '1rem',
+                padding: '1.1rem',
                 marginBottom: '1.5rem'
               }}>
-                <div style={{ fontSize: '0.88rem', color: '#f3f4f6', fontWeight: 700, marginBottom: '0.75rem', textAlign: 'center' }}>
+                <div style={{ fontSize: '0.9rem', color: '#14281d', fontWeight: 700, marginBottom: '0.85rem', textAlign: 'center' }}>
                   {t.doesLeafLookLike}
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
                   {/* Your Photo */}
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ position: 'relative', height: '110px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.15)' }}>
+                    <div style={{ position: 'relative', height: '115px', borderRadius: '14px', overflow: 'hidden', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>
                       <img src={scanResult.image || selectedImage} alt="Your Leaf" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
-                    <span style={{ fontSize: '0.78rem', color: '#9ca3af', display: 'block', marginTop: '0.35rem' }}>
+                    <span style={{ fontSize: '0.8rem', color: '#4b5563', fontWeight: 600, display: 'block', marginTop: '0.4rem' }}>
                       {t.yourPhoto}
                     </span>
                   </div>
 
                   {/* Target Reference Photo with checkmark */}
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ position: 'relative', height: '110px', borderRadius: '12px', overflow: 'hidden', border: '2px solid #10b981' }}>
+                    <div style={{ position: 'relative', height: '115px', borderRadius: '14px', overflow: 'hidden', border: '2.5px solid #16a34a', boxShadow: '0 2px 8px rgba(22, 163, 74, 0.2)' }}>
                       <img src={scanResult.referenceImg || REFERENCE_SYMPTOM_IMAGES['default']} alt="Reference" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       <div style={{
                         position: 'absolute',
-                        top: '6px',
-                        right: '6px',
-                        background: '#10b981',
+                        top: '7px',
+                        right: '7px',
+                        background: '#16a34a',
                         borderRadius: '50%',
-                        width: '20px',
-                        height: '20px',
+                        width: '22px',
+                        height: '22px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#ffffff'
+                        color: '#ffffff',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
                       }}>
-                        <Check size={13} strokeWidth={3} />
+                        <Check size={14} strokeWidth={3} />
                       </div>
                     </div>
-                    <span style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 700, display: 'block', marginTop: '0.35rem' }}>
+                    <span style={{ fontSize: '0.8rem', color: '#15803d', fontWeight: 800, display: 'block', marginTop: '0.4rem' }}>
                       {t.targetReference}
                     </span>
                   </div>
                 </div>
 
                 {/* Yes View Remedy & Retake Actions */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '0.6rem', marginTop: '0.85rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '0.75rem', marginTop: '1rem' }}>
                   <button
                     onClick={() => {
                       document.getElementById('treatment-deck')?.scrollIntoView({ behavior: 'smooth' });
                     }}
                     style={{
-                      background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                      background: 'linear-gradient(135deg, #16482e 0%, #0e2a1b 100%)',
                       color: '#ffffff',
                       border: 'none',
                       borderRadius: '12px',
-                      padding: '0.6rem 0.8rem',
+                      padding: '0.7rem 0.9rem',
                       fontWeight: 700,
-                      fontSize: '0.82rem',
+                      fontSize: '0.85rem',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '0.3rem'
+                      gap: '0.3rem',
+                      boxShadow: '0 3px 10px rgba(18, 57, 36, 0.25)'
                     }}
                   >
                     <span>✓ {t.yesViewRemedy}</span>
@@ -1115,14 +1156,15 @@ export default function DiseaseDetector({ user }) {
                       startCamera();
                     }}
                     style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      color: '#d1d5db',
+                      background: '#ffffff',
+                      border: '1px solid #cbd5e1',
+                      color: '#374151',
                       borderRadius: '12px',
-                      padding: '0.6rem 0.8rem',
+                      padding: '0.7rem 0.9rem',
                       fontWeight: 600,
-                      fontSize: '0.82rem',
-                      cursor: 'pointer'
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
                     }}
                   >
                     ↺ {t.retakePhoto}
@@ -1130,12 +1172,13 @@ export default function DiseaseDetector({ user }) {
                 </div>
               </div>
 
-              {/* Agronomist Audio Player Card (Screenshot 2) */}
+              {/* Agronomist Audio Player Card (Screenshot 2 - Deep Forest Green) */}
               <div style={{
-                background: 'linear-gradient(135deg, rgba(6, 78, 59, 0.6) 0%, rgba(4, 47, 36, 0.7) 100%)',
-                border: '1px solid rgba(52, 211, 153, 0.3)',
-                borderRadius: '16px',
-                padding: '1rem',
+                background: '#123924',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                boxShadow: '0 4px 15px rgba(18, 57, 36, 0.15)',
+                borderRadius: '18px',
+                padding: '1.1rem',
                 marginBottom: '1.5rem',
                 display: 'flex',
                 alignItems: 'center',
@@ -1162,9 +1205,9 @@ export default function DiseaseDetector({ user }) {
                 </button>
 
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#a7f3d0', marginBottom: '0.3rem' }}>
-                    <span style={{ fontWeight: 700 }}>🔊 {t.agronomistAudio}</span>
-                    <span>{isPlayingAudio ? '0:22 / 0:45' : '0:00 / 0:45'}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#bbf7d0', marginBottom: '0.35rem' }}>
+                    <span style={{ fontWeight: 800 }}>🔊 {t.agronomistAudio}</span>
+                    <span style={{ color: '#ffffff', fontWeight: 600 }}>{isPlayingAudio ? '0:22 / 0:45' : '0:00 / 0:45'}</span>
                   </div>
 
                   {/* Audio Waveform visualization */}
@@ -1185,8 +1228,8 @@ export default function DiseaseDetector({ user }) {
 
               {/* Treatment Deck Section (from Screenshot 1 & 2) */}
               <div id="treatment-deck" style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ fontSize: '1rem', color: '#ffffff', fontWeight: 800, marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Layers size={18} color="#34d399" />
+                <h4 style={{ fontSize: '1.05rem', color: '#14281d', fontWeight: 800, marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Layers size={19} color="#15803d" />
                   <span>{t.treatmentDeck}</span>
                 </h4>
 
@@ -1194,25 +1237,26 @@ export default function DiseaseDetector({ user }) {
                 <div style={{
                   display: 'flex',
                   gap: '0.4rem',
-                  background: 'rgba(0, 0, 0, 0.3)',
+                  background: '#e9eee5',
                   padding: '4px',
-                  borderRadius: '12px',
+                  borderRadius: '14px',
                   marginBottom: '1rem',
-                  border: '1px solid rgba(255, 255, 255, 0.08)'
+                  border: '1px solid #d9e2d4'
                 }}>
                   <button
                     onClick={() => setRemedyTab('organic')}
                     style={{
                       flex: 1,
-                      padding: '0.55rem',
+                      padding: '0.6rem 0.5rem',
                       borderRadius: '10px',
                       border: 'none',
-                      background: remedyTab === 'organic' ? '#059669' : 'transparent',
-                      color: remedyTab === 'organic' ? '#ffffff' : '#9ca3af',
+                      background: remedyTab === 'organic' ? '#123924' : 'transparent',
+                      color: remedyTab === 'organic' ? '#ffffff' : '#4b5563',
                       fontWeight: 700,
-                      fontSize: '0.8rem',
+                      fontSize: '0.82rem',
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.2s ease',
+                      boxShadow: remedyTab === 'organic' ? '0 2px 6px rgba(18, 57, 36, 0.2)' : 'none'
                     }}
                   >
                     🌿 {t.tabOrganic}
@@ -1222,15 +1266,16 @@ export default function DiseaseDetector({ user }) {
                     onClick={() => setRemedyTab('chemical')}
                     style={{
                       flex: 1,
-                      padding: '0.55rem',
+                      padding: '0.6rem 0.5rem',
                       borderRadius: '10px',
                       border: 'none',
                       background: remedyTab === 'chemical' ? '#d97706' : 'transparent',
-                      color: remedyTab === 'chemical' ? '#ffffff' : '#9ca3af',
+                      color: remedyTab === 'chemical' ? '#ffffff' : '#4b5563',
                       fontWeight: 700,
-                      fontSize: '0.8rem',
+                      fontSize: '0.82rem',
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.2s ease',
+                      boxShadow: remedyTab === 'chemical' ? '0 2px 6px rgba(217, 119, 6, 0.2)' : 'none'
                     }}
                   >
                     🧪 {t.tabChemical}
@@ -1240,15 +1285,16 @@ export default function DiseaseDetector({ user }) {
                     onClick={() => setRemedyTab('prevent')}
                     style={{
                       flex: 1,
-                      padding: '0.55rem',
+                      padding: '0.6rem 0.5rem',
                       borderRadius: '10px',
                       border: 'none',
-                      background: remedyTab === 'prevent' ? '#2563eb' : 'transparent',
-                      color: remedyTab === 'prevent' ? '#ffffff' : '#9ca3af',
+                      background: remedyTab === 'prevent' ? '#1e40af' : 'transparent',
+                      color: remedyTab === 'prevent' ? '#ffffff' : '#4b5563',
                       fontWeight: 700,
-                      fontSize: '0.8rem',
+                      fontSize: '0.82rem',
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.2s ease',
+                      boxShadow: remedyTab === 'prevent' ? '0 2px 6px rgba(30, 64, 175, 0.2)' : 'none'
                     }}
                   >
                     🛡️ {t.tabPrevent}
@@ -1257,37 +1303,40 @@ export default function DiseaseDetector({ user }) {
 
                 {/* Treatment Content Card */}
                 <div style={{
-                  background: 'rgba(0, 0, 0, 0.4)',
-                  border: '1px solid rgba(52, 211, 153, 0.2)',
+                  background: '#ffffff',
+                  border: '1px solid #e5eae1',
                   borderRadius: '16px',
-                  padding: '1.25rem'
+                  padding: '1.25rem',
+                  boxShadow: '0 2px 10px rgba(18, 57, 36, 0.03)'
                 }}>
                   {remedyTab === 'organic' && (
                     <div>
-                      <div style={{ color: '#34d399', fontWeight: 800, fontSize: '0.92rem', marginBottom: '0.5rem' }}>
-                        🌱 Neem Oil & Bio-Fungicide Solution
+                      <div style={{ color: '#15803d', fontWeight: 800, fontSize: '0.95rem', marginBottom: '0.6rem' }}>
+                        🌱 Neem Oil & Bio-Fungicide Solution (नीम का तेल)
                       </div>
                       
                       {/* Dosage Recipe with water drops (Screenshot 2) */}
-                      <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: '10px', marginBottom: '0.75rem' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#e5e7eb', marginBottom: '0.3rem' }}>
+                      <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '0.85rem', borderRadius: '12px', marginBottom: '0.85rem' }}>
+                        <div style={{ fontSize: '0.86rem', color: '#166534', marginBottom: '0.35rem', fontWeight: 600 }}>
                           💧 <strong>5 ml Neem Oil</strong> per 1L water (5 मि.ली. नीम तेल + 1L पानी)
                         </div>
-                        <div style={{ fontSize: '0.85rem', color: '#e5e7eb' }}>
+                        <div style={{ fontSize: '0.86rem', color: '#166534', fontWeight: 600 }}>
                           💧 Add <strong>2 drops</strong> mild soap / detergent for spreadability
                         </div>
                       </div>
 
-                      <div style={{ color: '#d1d5db', fontSize: '0.88rem', lineHeight: '1.6' }}>
+                      <div style={{ color: '#374151', fontSize: '0.88rem', lineHeight: '1.6' }}>
                         {scanResult.organicRemedy || scanResult.organic_remedy}
                       </div>
 
-                      <div style={{ marginTop: '0.85rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '0.75rem' }}>
-                        <div style={{ fontSize: '0.8rem', color: '#fbbf24', fontWeight: 700, marginBottom: '0.2rem' }}>
-                          🔍 {t.fieldActions}:
-                        </div>
-                        <div style={{ fontSize: '0.82rem', color: '#9ca3af' }}>
-                          • Prune lowest 15-20 cm of infected leaves to stop soil splash.
+                      <div style={{ marginTop: '0.85rem', borderTop: '1px solid #e5eae1', paddingTop: '0.75rem' }}>
+                        <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '0.75rem', borderRadius: '10px' }}>
+                          <div style={{ fontSize: '0.82rem', color: '#b45309', fontWeight: 800, marginBottom: '0.2rem' }}>
+                            🔍 {t.fieldActions}:
+                          </div>
+                          <div style={{ fontSize: '0.82rem', color: '#92400e' }}>
+                            • Prune lowest 15-20 cm of infected leaves to stop soil splash.
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1295,15 +1344,15 @@ export default function DiseaseDetector({ user }) {
 
                   {remedyTab === 'chemical' && (
                     <div>
-                      <div style={{ color: '#fbbf24', fontWeight: 800, fontSize: '0.92rem', marginBottom: '0.5rem' }}>
+                      <div style={{ color: '#d97706', fontWeight: 800, fontSize: '0.95rem', marginBottom: '0.6rem' }}>
                         🧪 Standard Fungicide Spray
                       </div>
-                      <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: '10px', marginBottom: '0.75rem' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#e5e7eb' }}>
+                      <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '0.85rem', borderRadius: '12px', marginBottom: '0.85rem' }}>
+                        <div style={{ fontSize: '0.86rem', color: '#92400e', fontWeight: 600 }}>
                           💧 Apply <strong>2g per liter</strong> of water using flat-fan nozzle sprayer.
                         </div>
                       </div>
-                      <div style={{ color: '#d1d5db', fontSize: '0.88rem', lineHeight: '1.6' }}>
+                      <div style={{ color: '#374151', fontSize: '0.88rem', lineHeight: '1.6' }}>
                         {scanResult.chemicalRemedy || scanResult.chemical_remedy}
                       </div>
                     </div>
@@ -1311,10 +1360,10 @@ export default function DiseaseDetector({ user }) {
 
                   {remedyTab === 'prevent' && (
                     <div>
-                      <div style={{ color: '#60a5fa', fontWeight: 800, fontSize: '0.92rem', marginBottom: '0.5rem' }}>
+                      <div style={{ color: '#1e40af', fontWeight: 800, fontSize: '0.95rem', marginBottom: '0.6rem' }}>
                         🛡️ Crop Rotation & Canopy Sanitation
                       </div>
-                      <div style={{ color: '#d1d5db', fontSize: '0.88rem', lineHeight: '1.6' }}>
+                      <div style={{ color: '#374151', fontSize: '0.88rem', lineHeight: '1.6' }}>
                         {scanResult.prevention || 'Maintain 60cm plant spacing for air circulation and avoid sprinkler irrigation.'}
                       </div>
                     </div>
@@ -1323,68 +1372,57 @@ export default function DiseaseDetector({ user }) {
               </div>
 
               {/* Action Buttons: Voice Question, Schedule & WhatsApp (Screenshot 2) */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 
-                {/* Hold to Ask Question Button */}
+                {/* Hold to Ask Question Button (Golden Amber CTA) */}
                 <button
                   onClick={() => setShowVoiceModal(true)}
-                  style={{
-                    background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
-                    color: '#ffffff',
-                    border: 'none',
-                    padding: '0.85rem',
-                    borderRadius: '14px',
-                    fontWeight: 800,
-                    fontSize: '0.92rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    boxShadow: '0 4px 15px rgba(217, 119, 6, 0.35)'
-                  }}
+                  className="btn-amber"
+                  style={{ width: '100%', padding: '0.95rem' }}
                 >
-                  <Mic size={18} />
+                  <Mic size={19} />
                   <span>{t.askQuestionBtn}</span>
                 </button>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                   <button
                     onClick={handleScheduleReminder}
                     style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      color: '#e5e7eb',
-                      padding: '0.75rem',
+                      background: '#ffffff',
+                      border: '1px solid #cbd5e1',
+                      color: '#14281d',
+                      padding: '0.8rem',
                       borderRadius: '12px',
-                      fontWeight: 600,
-                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      fontSize: '0.82rem',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '0.4rem'
+                      gap: '0.4rem',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
                     }}
                   >
-                    <Calendar size={16} color="#34d399" />
+                    <Calendar size={16} color="#15803d" />
                     <span>{t.addSchedule}</span>
                   </button>
 
                   <button
                     onClick={handleShareWhatsApp}
                     style={{
-                      background: 'rgba(37, 211, 102, 0.15)',
-                      border: '1px solid rgba(37, 211, 102, 0.35)',
-                      color: '#25d366',
-                      padding: '0.75rem',
+                      background: '#ecfdf5',
+                      border: '1px solid #a7f3d0',
+                      color: '#15803d',
+                      padding: '0.8rem',
                       borderRadius: '12px',
-                      fontWeight: 700,
-                      fontSize: '0.8rem',
+                      fontWeight: 800,
+                      fontSize: '0.82rem',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '0.4rem'
+                      gap: '0.4rem',
+                      boxShadow: '0 2px 6px rgba(22, 101, 52, 0.05)'
                     }}
                   >
                     <Share2 size={16} />
@@ -1394,12 +1432,12 @@ export default function DiseaseDetector({ user }) {
 
                 {showScheduleToast && (
                   <div style={{
-                    background: '#10b981',
+                    background: '#15803d',
                     color: '#ffffff',
-                    padding: '0.6rem',
+                    padding: '0.65rem',
                     borderRadius: '10px',
                     textAlign: 'center',
-                    fontSize: '0.82rem',
+                    fontSize: '0.84rem',
                     fontWeight: 700
                   }}>
                     ✓ Treatment reminder added to farmer calendar!
@@ -1423,19 +1461,20 @@ export default function DiseaseDetector({ user }) {
                 width: '84px',
                 height: '84px',
                 borderRadius: '50%',
-                background: 'rgba(16, 185, 129, 0.12)',
+                background: '#ecfdf5',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: '1.5rem',
-                border: '1px solid rgba(52, 211, 153, 0.25)'
+                border: '1px solid #a7f3d0',
+                boxShadow: '0 4px 15px rgba(16, 185, 129, 0.15)'
               }}>
-                <Scan size={44} color="#34d399" />
+                <Scan size={44} color="#059669" />
               </div>
-              <h3 style={{ fontSize: '1.45rem', color: '#ffffff', fontWeight: 800 }}>
+              <h3 style={{ fontSize: '1.45rem', color: '#14281d', fontWeight: 800 }}>
                 {t.checkHealthBtn}
               </h3>
-              <p style={{ color: '#9ca3af', fontSize: '0.9rem', maxWidth: '340px', marginTop: '0.5rem', lineHeight: '1.6' }}>
+              <p style={{ color: '#4b5563', fontSize: '0.9rem', maxWidth: '340px', marginTop: '0.5rem', lineHeight: '1.6' }}>
                 {lang === 'hi'
                   ? 'पत्ती की फोटो खींचें या गैलरी से अपलोड करें। एआई तुरंत रोग की पहचान कर जैविक व रासायनिक उपचार बताएगा।'
                   : 'Capture or upload a crop leaf picture. AI instantly diagnoses disease severity and provides organic & chemical remedies.'
@@ -1449,7 +1488,7 @@ export default function DiseaseDetector({ user }) {
 
       {/* Preset Samples Bar */}
       <div style={{ marginTop: '2.5rem' }}>
-        <h4 style={{ color: '#9ca3af', fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '0.04em' }}>
+        <h4 style={{ color: '#14281d', fontSize: '0.95rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '0.04em' }}>
           🌿 {t.samplePresets}:
         </h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
@@ -1464,13 +1503,14 @@ export default function DiseaseDetector({ user }) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.85rem',
-                border: '1px solid rgba(255, 255, 255, 0.08)'
+                border: '1px solid #e5eae1',
+                boxShadow: '0 2px 8px rgba(18, 57, 36, 0.04)'
               }}
             >
               <img src={sample.image} alt={sample.name} style={{ width: '48px', height: '48px', borderRadius: '10px', objectFit: 'cover' }} />
               <div>
-                <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#f3f4f6' }}>{sample.name}</div>
-                <div style={{ fontSize: '0.75rem', color: sample.status === 'healthy' ? '#34d399' : '#fbbf24' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#14281d' }}>{sample.name}</div>
+                <div style={{ fontSize: '0.75rem', color: sample.status === 'healthy' ? '#059669' : '#d97706', fontWeight: 600 }}>
                   {sample.diseaseName.split('(')[0]}
                 </div>
               </div>
@@ -1484,8 +1524,8 @@ export default function DiseaseDetector({ user }) {
         <div style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0, 0, 0, 0.75)',
-          backdropFilter: 'blur(8px)',
+          background: 'rgba(10, 20, 16, 0.65)',
+          backdropFilter: 'blur(6px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -1496,23 +1536,24 @@ export default function DiseaseDetector({ user }) {
             maxWidth: '480px',
             width: '100%',
             padding: '2rem',
-            background: 'rgba(16, 28, 23, 0.98)',
-            border: '1px solid rgba(52, 211, 153, 0.4)'
+            background: '#ffffff',
+            border: '1px solid #e5eae1',
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#34d399', fontWeight: 800 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#15803d', fontWeight: 800 }}>
                 <Mic size={20} />
                 <span>{lang === 'hi' ? 'कृषि मित्र से सवाल पूछें' : 'Ask Agronomist Question'}</span>
               </div>
               <button 
                 onClick={() => { setShowVoiceModal(false); setAiAnswer(''); }}
-                style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: '#6b7280', cursor: 'pointer' }}
               >
                 <X size={20} />
               </button>
             </div>
 
-            <p style={{ color: '#9ca3af', fontSize: '0.85rem', marginBottom: '1rem' }}>
+            <p style={{ color: '#4b5563', fontSize: '0.85rem', marginBottom: '1rem' }}>
               {lang === 'hi' 
                 ? 'छिड़काव का समय, पानी की मात्रा या अन्य दवाओं के बारे में पूछें:' 
                 : 'Ask about spray timings, dosage amounts, or weather precautions:'}
@@ -1526,11 +1567,11 @@ export default function DiseaseDetector({ user }) {
                 placeholder={lang === 'hi' ? 'जैसे: नीम तेल का छिड़काव कब करें?' : 'e.g., When should I spray neem oil?'}
                 style={{
                   flex: 1,
-                  background: 'rgba(0, 0, 0, 0.4)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  background: '#f8faf6',
+                  border: '1px solid #cbd5e1',
                   padding: '0.75rem 1rem',
                   borderRadius: '12px',
-                  color: '#ffffff',
+                  color: '#14281d',
                   fontSize: '0.9rem'
                 }}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleAskQuestion(userQuestion); }}
@@ -1556,13 +1597,14 @@ export default function DiseaseDetector({ user }) {
                   key={idx}
                   onClick={() => { setUserQuestion(chip); handleAskQuestion(chip); }}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: '#34d399',
+                    background: '#f0fdf4',
+                    border: '1px solid #bbf7d0',
+                    color: '#15803d',
                     padding: '0.35rem 0.75rem',
                     borderRadius: '999px',
-                    fontSize: '0.75rem',
-                    cursor: 'pointer'
+                    fontSize: '0.78rem',
+                    cursor: 'pointer',
+                    fontWeight: 600
                   }}
                 >
                   {chip}
@@ -1573,15 +1615,15 @@ export default function DiseaseDetector({ user }) {
             {/* AI Agronomist Answer */}
             {aiAnswer && (
               <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
-                border: '1px solid rgba(52, 211, 153, 0.3)',
+                background: '#f0fdf4',
+                border: '1px solid #bbf7d0',
                 padding: '1rem',
                 borderRadius: '14px',
-                color: '#e5e7eb',
+                color: '#14281d',
                 fontSize: '0.88rem',
                 lineHeight: '1.5'
               }}>
-                <div style={{ fontWeight: 800, color: '#34d399', marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <div style={{ fontWeight: 800, color: '#15803d', marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                   <Sparkles size={15} /> Agri Bandhu Advisor:
                 </div>
                 {aiAnswer}
