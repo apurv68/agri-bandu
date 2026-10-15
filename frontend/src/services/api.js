@@ -1,14 +1,30 @@
 import axios from 'axios';
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
 
-// Multi-Tier Database Endpoints (24/7 Render Cloud Endpoint + Localtunnel + Local IP)
-const ALL_ENDPOINTS = [
-  'https://agri-bandhu.onrender.com/api', // Live 24/7 Cloud Database Endpoint
-  'https://pretty-banks-lead.loca.lt/api', // Localtunnel Public Endpoint
-  'http://10.0.2.2:8000/api', // Android Emulator 0ms Direct PC Host Loopback IP
-  'http://10.123.143.94:8000/api', // Local PC Wi-Fi IP
-  'http://localhost:8000/api'
-];
+const isRenderWeb = typeof window !== 'undefined' && window.location.hostname.includes('onrender.com');
+
+// Multi-Tier Database Endpoints (24/7 Render Cloud Endpoint + Relative Web Endpoint + Local IP)
+const ALL_ENDPOINTS = Capacitor.isNativePlatform()
+  ? [
+      'https://agri-bandhu.onrender.com/api', // Live 24/7 Cloud Database Endpoint for Android APK
+      'http://10.0.2.2:8000/api', // Android Emulator 0ms Direct PC Host Loopback IP
+      'http://localhost:8000/api'
+    ]
+  : isRenderWeb
+    ? [
+        '/api', // Same-origin relative path for 24/7 Web App on Render
+        'https://agri-bandhu.onrender.com/api'
+      ]
+    : [
+        'https://agri-bandhu.onrender.com/api', // Instant 24/7 cloud AI backend for local web testing
+        '/api',
+        'http://localhost:8000/api'
+      ];
+
+// Clear stale localhost cached endpoint so local testing doesn't fail
+if (typeof window !== 'undefined' && localStorage.getItem('agri_working_api')?.includes('8000')) {
+  localStorage.removeItem('agri_working_api');
+}
 
 let cachedWorkingEndpoint = localStorage.getItem('agri_working_api') || null;
 
@@ -34,11 +50,17 @@ const callBackendDatabase = async (method, uri, data = null, headers = {}) => {
       ...headers
     };
 
+    // Auto-detect FormData so browser attaches multipart boundary correctly
+    if (typeof FormData !== 'undefined' && data instanceof FormData) {
+      delete requestHeaders['Content-Type'];
+    }
+
     if (authToken) {
       requestHeaders['Authorization'] = `Bearer ${authToken}`;
     }
 
     const isScanRequest = uri.includes('/disease/scan') || uri.includes('/disease');
+
     const requestTimeout = isScanRequest ? 60000 : 20000;
 
     // Attempt 1: Native CapacitorHttp for Android Mobile Native Bridge
@@ -203,9 +225,8 @@ export const diseaseService = {
       if (fileObj) {
         const formData = new FormData();
         formData.append('image', fileObj);
-        const response = await callBackendDatabase('POST', '/disease/scan', formData, {
-          'Content-Type': 'multipart/form-data'
-        });
+        const response = await callBackendDatabase('POST', '/disease/scan', formData);
+
         return response.data;
       }
       const response = await callBackendDatabase('POST', '/disease/scan', { image: imageData });

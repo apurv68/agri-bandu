@@ -3,6 +3,15 @@
 use Illuminate\Support\Facades\Route;
 
 Route::match(['get', 'head'], '/', function () {
+    $spaFile = public_path('index.html');
+    if (!file_exists($spaFile)) {
+        $spaFile = public_path('app.html');
+    }
+    if (file_exists($spaFile)) {
+        return response()->file($spaFile, [
+            'Content-Type' => 'text/html; charset=UTF-8',
+        ]);
+    }
     return response()->json([
         'status' => 'Active',
         'application' => 'Agri Bandhu Laravel API Backend',
@@ -40,3 +49,18 @@ Route::get('/db-check', function () {
         ], 500);
     }
 });
+
+// Fallback for Single Page App (SPA) routes on web
+Route::fallback(function () {
+    $spaFile = public_path('index.html');
+    if (!file_exists($spaFile)) {
+        $spaFile = public_path('app.html');
+    }
+    if (file_exists($spaFile)) {
+        return response()->file($spaFile, [
+            'Content-Type' => 'text/html; charset=UTF-8',
+        ]);
+    }
+    return response()->json(['error' => 'Endpoint Not Found'], 404);
+});
+

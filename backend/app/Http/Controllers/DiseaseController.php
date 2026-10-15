@@ -47,6 +47,24 @@ class DiseaseController extends Controller
             return $imageDataRaw;
         }
 
+        if (str_starts_with($imageDataRaw, '/') || str_starts_with($imageDataRaw, 'images/')) {
+            $cleaned = ltrim($imageDataRaw, '/');
+            $candidates = [
+                public_path($cleaned),
+                base_path('../frontend/public/' . $cleaned),
+                base_path('public/' . $cleaned),
+                public_path('images/crops/' . basename($cleaned)),
+                base_path('../frontend/public/images/crops/' . basename($cleaned)),
+            ];
+            foreach ($candidates as $cand) {
+                if (File::exists($cand)) {
+                    $localFilePath = $cand;
+                    return url($cleaned);
+                }
+            }
+        }
+
+
         if (str_contains($imageDataRaw, 'data:image')) {
             try {
                 @list($type, $data) = explode(';', $imageDataRaw);

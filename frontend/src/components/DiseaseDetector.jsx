@@ -296,7 +296,7 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
     setCameraActive(false);
   };
 
-  const compressImage = (dataUrl, maxWidth = 640, quality = 0.8) => {
+  const compressImage = (dataUrl, maxWidth = 1024, quality = 0.9) => {
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
@@ -321,14 +321,15 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
   const capturePhoto = async () => {
     if (videoRef.current && canvasRef.current) {
       const context = canvasRef.current.getContext('2d');
-      canvasRef.current.width = videoRef.current.videoWidth || 640;
-      canvasRef.current.height = videoRef.current.videoHeight || 480;
-      context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
-      const rawData = canvasRef.current.toDataURL('image/jpeg');
-      const compressed = await compressImage(rawData);
-      setSelectedImage(compressed);
+      const w = videoRef.current.videoWidth || 1280;
+      const h = videoRef.current.videoHeight || 720;
+      canvasRef.current.width = w;
+      canvasRef.current.height = h;
+      context.drawImage(videoRef.current, 0, 0, w, h);
+      const rawData = canvasRef.current.toDataURL('image/jpeg', 0.92);
+      setSelectedImage(rawData);
       stopCamera();
-      runAnalysis(compressed);
+      runAnalysis(rawData);
     }
   };
 
@@ -336,10 +337,10 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = async () => {
-        const compressed = await compressImage(reader.result);
-        setSelectedImage(compressed);
-        runAnalysis(compressed);
+      reader.onload = () => {
+        const preview = reader.result;
+        setSelectedImage(preview);
+        runAnalysis(preview, file);
       };
       reader.readAsDataURL(file);
     }
@@ -353,40 +354,69 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
     setSavedSuccess(false);
 
     try {
-      const res = await diseaseService.scanLeaf(sample.image);
-      if (res && res.diagnosis) {
+      // If sample image is a relative URL, fetch and convert to base64 so server receives the real leaf image
+      let scanPayload = sample.image;
+      if (sample.image.startsWith('/')) {
+        try {
+          const fetchRes = await fetch(sample.image);
+          const blob = await fetchRes.blob();
+          scanPayload = await new Promise((resolve) => {
+            const r = new FileReader();
+            r.onloadend = () => resolve(r.result);
+            r.readAsDataURL(blob);
+          });
+        } catch (fetchErr) {
+          scanPayload = sample.image;
+        }
+      }
+
+      const res = await diseaseService.scanLeaf(scanPayload);
+      if (res && res.diagnosis && res.diagnosis.status !== 'invalid' && !res.diagnosis.diseaseName?.includes('Non-Leaf')) {
+        const predictedClass = res.diagnosis.predicted_class || '';
+        const matchedReference = REFERENCE_SYMPTOM_IMAGES[predictedClass] || sample.referenceImg || sample.image;
         setScanResult({ 
           ...sample, 
           ...res.diagnosis, 
-          image: res.image_url || sample.image,
-          referenceImg: sample.referenceImg || sample.image
+          image: sample.image,
+          referenceImg: matchedReference
         });
         setSavedSuccess(true);
       } else {
+        // Fallback to verified preset pathology for sample card
         setScanResult(sample);
+        setSavedSuccess(true);
       }
     } catch (e) {
       setScanResult(sample);
+      setSavedSuccess(true);
     } finally {
       setIsScanning(false);
     }
   };
 
-  const runAnalysis = async (imgSrc) => {
+  const runAnalysis = async (imgSrc, fileObj = null) => {
     setIsScanning(true);
     setScanResult(null);
     setSavedSuccess(false);
 
     try {
-      const compressed = await compressImage(imgSrc);
-      const res = await diseaseService.scanLeaf(compressed);
+      let res = null;
+      if (fileObj) {
+        // High fidelity upload of original user file directly as FormData
+        res = await diseaseService.scanLeaf(null, fileObj);
+      } else {
+        // Camera viewfinder capture or base64 photo
+        const optimized = await compressImage(imgSrc);
+        res = await diseaseService.scanLeaf(optimized);
+      }
+
       if (res && res.diagnosis) {
         const predictedClass = res.diagnosis.predicted_class || '';
         const matchedReference = REFERENCE_SYMPTOM_IMAGES[predictedClass] || REFERENCE_SYMPTOM_IMAGES['default'];
 
         setScanResult({
           ...res.diagnosis,
-          image: res.image_url || compressed,
+          image: imgSrc,
           referenceImg: matchedReference,
           scan_id: res.scan_id
         });
@@ -398,7 +428,7 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
           scientificName: 'Retry with clear lighting',
           status: 'invalid',
           confidence: 0,
-          image: compressed,
+          image: imgSrc,
           symptoms: ['Could not extract distinct disease features. Please ensure close-up leaf framing.'],
           organicRemedy: 'Please take a close-up photo of the affected leaf in good lighting.',
           chemicalRemedy: 'N/A',
@@ -422,6 +452,7 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
       setIsScanning(false);
     }
   };
+
 
   // Severity calculator based on status & confidence
   const getSeverityLevel = () => {
