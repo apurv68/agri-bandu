@@ -106,6 +106,27 @@ export default function Navbar({ activePage, setActivePage, user, onOpenAuth, on
           </button>
 
           <button
+            onClick={() => setActivePage('farm')}
+            style={{
+              padding: '0.55rem 1.1rem',
+              borderRadius: '12px',
+              border: activePage === 'farm' ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid transparent',
+              background: activePage === 'farm' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+              color: '#ffffff',
+              fontSize: '0.88rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <Sprout size={17} />
+            <span>My Farm & Schedule</span>
+          </button>
+
+          <button
             onClick={() => setActivePage('auth')}
             style={{
               padding: '0.55rem 1.1rem',

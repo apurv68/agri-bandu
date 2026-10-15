@@ -1,13 +1,70 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Component } from 'react';
 import Navbar from './components/Navbar';
 import AuthModal from './components/AuthModal';
 import DiseaseDetector from './components/DiseaseDetector';
 import WeatherAndCrops from './components/WeatherAndCrops';
+import FarmManager from './components/FarmManager';
 import { authService } from './services/api';
-import { Sprout, ShieldCheck, Heart } from 'lucide-react';
+import { Sprout, ShieldCheck, Heart, AlertTriangle } from 'lucide-react';
+
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("AgriBandhu ErrorBoundary caught an error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          maxWidth: '600px',
+          margin: '4rem auto',
+          padding: '2rem',
+          background: '#ffffff',
+          borderRadius: '16px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          textAlign: 'center',
+          border: '1px solid #fee2e2'
+        }}>
+          <AlertTriangle size={48} color="#dc2626" style={{ margin: '0 auto 1rem auto' }} />
+          <h2 style={{ color: '#991b1b', marginBottom: '0.5rem' }}>Something went wrong</h2>
+          <p style={{ color: '#4b5563', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+            {this.state.error?.message || 'An unexpected error occurred while rendering the page.'}
+          </p>
+          <button
+            onClick={() => {
+              this.setState({ hasError: false, error: null });
+              window.location.reload();
+            }}
+            style={{
+              background: '#16a34a',
+              color: '#ffffff',
+              border: 'none',
+              padding: '0.6rem 1.4rem',
+              borderRadius: '10px',
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            Reload Application
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
-  const [activePage, setActivePage] = useState('detector'); // 'auth' | 'detector' | 'weather'
+  const [activePage, setActivePage] = useState('detector'); // 'auth' | 'detector' | 'weather' | 'farm'
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -35,23 +92,35 @@ export default function App() {
       />
 
       {/* Main Content View Switcher */}
-      <main style={{ flex: 1 }}>
-        {activePage === 'auth' && (
-          <AuthModal
-            user={user}
-            setUser={setUser}
-            onScanRedirect={() => setActivePage('detector')}
-          />
-        )}
+      <ErrorBoundary>
+        <main style={{ flex: 1 }}>
+          {activePage === 'auth' && (
+            <AuthModal
+              user={user}
+              setUser={setUser}
+              onScanRedirect={() => setActivePage('detector')}
+            />
+          )}
 
-        {activePage === 'detector' && (
-          <DiseaseDetector user={user} />
-        )}
+          {activePage === 'detector' && (
+            <DiseaseDetector 
+              user={user} 
+              onNavigateFarm={() => setActivePage('farm')} 
+            />
+          )}
 
-        {activePage === 'weather' && (
-          <WeatherAndCrops />
-        )}
-      </main>
+          {activePage === 'weather' && (
+            <WeatherAndCrops />
+          )}
+
+          {activePage === 'farm' && (
+            <FarmManager 
+              user={user} 
+              onScanRedirect={() => setActivePage('detector')} 
+            />
+          )}
+        </main>
+      </ErrorBoundary>
 
       {/* Modern Footer */}
       <footer style={{

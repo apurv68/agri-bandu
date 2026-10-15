@@ -90,41 +90,40 @@ export default function AuthModal({ user, setUser }) {
 
   if (user) {
     return (
-      <div style={{ maxWidth: '900px', margin: '2.5rem auto', padding: '0 1rem' }}>
-        <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ maxWidth: '800px', margin: '3rem auto', padding: '0 1rem' }}>
+        <div className="glass-panel" style={{ padding: '3rem 2rem', textAlign: 'center', position: 'relative', overflow: 'hidden', background: '#ffffff', border: '1px solid #e5eae1', borderRadius: '24px', boxShadow: '0 10px 30px rgba(18, 57, 36, 0.08)' }}>
           <div style={{
-            position: 'absolute',
-            top: '-50px',
-            right: '-50px',
-            width: '200px',
-            height: '200px',
-            background: 'radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%)',
-            pointerEvents: 'none',
-          }} />
-
-          <div style={{
-            width: '80px',
-            height: '80px',
+            width: '84px',
+            height: '84px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.4))',
-            border: '2px solid #34d399',
+            background: '#f0fdf4',
+            border: '2px solid #bbf7d0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 1.5rem',
-            boxShadow: '0 0 30px rgba(16, 185, 129, 0.3)',
+            boxShadow: '0 4px 20px rgba(22, 101, 52, 0.12)',
           }}>
-            <ShieldCheck size={40} color="#34d399" />
+            <ShieldCheck size={44} color="#15803d" />
           </div>
 
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#f3f4f6', marginBottom: '0.5rem' }}>
+          <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#14281d', marginBottom: '0.4rem' }}>
             Welcome, {user.name}!
           </h2>
-          <p style={{ color: '#9ca3af', fontSize: '0.95rem', marginBottom: '1.75rem' }}>
-            Signed in as <strong style={{ color: '#34d399' }}>{user.email}</strong> • Role: <strong style={{ color: '#60a5fa' }}>{user.role || 'Farmer'}</strong>
+          <p style={{ color: '#4b5563', fontSize: '0.95rem', marginBottom: '1.75rem' }}>
+            Signed in as <strong style={{ color: '#15803d' }}>{user.email}</strong> • Role: <strong style={{ color: '#0284c7' }}>{user.role || 'Farmer'}</strong>
           </p>
 
-
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', maxWidth: '540px', margin: '0 auto 2rem auto' }}>
+            <div style={{ background: '#f8faf6', border: '1px solid #e2ebd8', borderRadius: '16px', padding: '1rem' }}>
+              <div style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: 600 }}>Active Role</div>
+              <div style={{ fontSize: '1.1rem', color: '#14281d', fontWeight: 800, marginTop: '0.2rem' }}>{user.role || 'Farmer Partner'}</div>
+            </div>
+            <div style={{ background: '#f8faf6', border: '1px solid #e2ebd8', borderRadius: '16px', padding: '1rem' }}>
+              <div style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: 600 }}>Account Security</div>
+              <div style={{ fontSize: '1.1rem', color: '#15803d', fontWeight: 800, marginTop: '0.2rem' }}>Verified ✓</div>
+            </div>
+          </div>
 
           <div>
             <button
@@ -132,8 +131,20 @@ export default function AuthModal({ user, setUser }) {
                 await authService.logout();
                 setUser(null);
               }}
-              className="btn-secondary"
-              style={{ padding: '0.75rem 1.75rem', fontSize: '0.95rem' }}
+              style={{
+                background: '#ffffff',
+                border: '1.5px solid #d1d5db',
+                color: '#374151',
+                padding: '0.75rem 2rem',
+                borderRadius: '12px',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.04)'
+              }}
             >
               <LogOut size={18} />
               <span>Sign Out Account</span>
@@ -145,53 +156,56 @@ export default function AuthModal({ user, setUser }) {
   }
 
   return (
-    <div style={{ maxWidth: '480px', margin: '2.5rem auto', padding: '0 1rem' }}>
-      <div className="glass-panel" style={{ padding: '2.25rem' }}>
+    <div style={{ maxWidth: '480px', margin: '3rem auto', padding: '0 1rem' }}>
+      <div className="glass-panel" style={{ padding: '2.5rem', background: '#ffffff', border: '1px solid #e5eae1', borderRadius: '24px', boxShadow: '0 10px 30px rgba(18, 57, 36, 0.08)' }}>
+        
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
           <div style={{
-            width: '54px',
-            height: '54px',
-            borderRadius: '16px',
-            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.3))',
-            border: '1px solid rgba(52, 211, 153, 0.4)',
+            width: '60px',
+            height: '60px',
+            borderRadius: '18px',
+            background: '#f0fdf4',
+            border: '1.5px solid #bbf7d0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 1rem',
+            margin: '0 auto 1.1rem',
+            boxShadow: '0 4px 15px rgba(22, 101, 52, 0.08)'
           }}>
-            {isLogin ? <LogIn size={26} color="#34d399" /> : <UserPlus size={26} color="#34d399" />}
+            {isLogin ? <LogIn size={28} color="#15803d" /> : <UserPlus size={28} color="#15803d" />}
           </div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#f3f4f6' }}>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#14281d', margin: '0 0 0.3rem 0' }}>
             {isLogin ? 'Farmer Portal Login' : 'Create Farmer Account'}
           </h2>
-          <p style={{ color: '#9ca3af', fontSize: '0.88rem', marginTop: '0.3rem' }}>
-            {isLogin ? 'Sign in to access your crop scan history' : 'Register to manage crop diagnostics'}
+          <p style={{ color: '#4b5563', fontSize: '0.9rem', margin: 0 }}>
+            {isLogin ? 'Sign in to access your crop scan history' : 'Register to manage crop diagnostics & farm schedule'}
           </p>
         </div>
 
         {/* Tab Switcher */}
         <div style={{
           display: 'flex',
-          background: 'rgba(0, 0, 0, 0.4)',
-          borderRadius: '12px',
-          padding: '0.25rem',
+          background: '#f1f5f9',
+          borderRadius: '14px',
+          padding: '0.3rem',
           marginBottom: '1.75rem',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          border: '1px solid #e2e8f0',
         }}>
           <button
             onClick={() => { setIsLogin(true); setMessage(null); setError(null); }}
             style={{
               flex: 1,
-              padding: '0.65rem',
-              borderRadius: '10px',
+              padding: '0.7rem',
+              borderRadius: '11px',
               border: 'none',
-              background: isLogin ? 'var(--emerald-600)' : 'transparent',
-              color: '#ffffff',
-              fontWeight: 600,
+              background: isLogin ? '#16a34a' : 'transparent',
+              color: isLogin ? '#ffffff' : '#4b5563',
+              fontWeight: 700,
               fontSize: '0.9rem',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
+              boxShadow: isLogin ? '0 2px 8px rgba(22, 163, 74, 0.25)' : 'none'
             }}
           >
             Sign In
@@ -200,15 +214,16 @@ export default function AuthModal({ user, setUser }) {
             onClick={() => { setIsLogin(false); setMessage(null); setError(null); }}
             style={{
               flex: 1,
-              padding: '0.65rem',
-              borderRadius: '10px',
+              padding: '0.7rem',
+              borderRadius: '11px',
               border: 'none',
-              background: !isLogin ? 'var(--emerald-600)' : 'transparent',
-              color: '#ffffff',
-              fontWeight: 600,
+              background: !isLogin ? '#16a34a' : 'transparent',
+              color: !isLogin ? '#ffffff' : '#4b5563',
+              fontWeight: 700,
               fontSize: '0.9rem',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
+              boxShadow: !isLogin ? '0 2px 8px rgba(22, 163, 74, 0.25)' : 'none'
             }}
           >
             Sign Up
@@ -219,17 +234,18 @@ export default function AuthModal({ user, setUser }) {
         {message && (
           <div style={{
             padding: '1rem',
-            borderRadius: '12px',
-            background: 'rgba(16, 185, 129, 0.15)',
-            border: '1px solid rgba(52, 211, 153, 0.4)',
-            color: '#34d399',
+            borderRadius: '14px',
+            background: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+            color: '#166534',
             fontSize: '0.9rem',
             marginBottom: '1.5rem',
             display: 'flex',
             alignItems: 'center',
             gap: '0.6rem',
+            fontWeight: 600
           }}>
-            <CheckCircle2 size={20} style={{ flexShrink: 0 }} />
+            <CheckCircle2 size={20} color="#15803d" style={{ flexShrink: 0 }} />
             <span>{message}</span>
           </div>
         )}
@@ -238,17 +254,18 @@ export default function AuthModal({ user, setUser }) {
         {error && (
           <div style={{
             padding: '1rem',
-            borderRadius: '12px',
-            background: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.4)',
-            color: '#f87171',
+            borderRadius: '14px',
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#991b1b',
             fontSize: '0.9rem',
             marginBottom: '1.5rem',
             display: 'flex',
             alignItems: 'center',
             gap: '0.6rem',
+            fontWeight: 600
           }}>
-            <AlertCircle size={20} style={{ flexShrink: 0 }} />
+            <AlertCircle size={20} color="#dc2626" style={{ flexShrink: 0 }} />
             <span>{error}</span>
           </div>
         )}
@@ -257,11 +274,11 @@ export default function AuthModal({ user, setUser }) {
         {isLogin ? (
           <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div>
-              <label style={{ display: 'block', color: '#d1d5db', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>
+              <label style={{ display: 'block', color: '#14281d', fontSize: '0.88rem', fontWeight: 700, marginBottom: '0.45rem' }}>
                 Email Address
               </label>
               <div style={{ position: 'relative' }}>
-                <Mail size={18} color="#9ca3af" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                <Mail size={18} color="#6b7280" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   type="email"
                   name="email"
@@ -271,24 +288,25 @@ export default function AuthModal({ user, setUser }) {
                   onChange={handleChange}
                   style={{
                     width: '100%',
-                    padding: '0.75rem 1rem 0.75rem 2.75rem',
-                    background: 'rgba(0, 0, 0, 0.4)',
-                    border: '1px solid rgba(52, 211, 153, 0.2)',
+                    padding: '0.8rem 1rem 0.8rem 2.75rem',
+                    background: '#ffffff',
+                    border: '1.5px solid #d1d5db',
                     borderRadius: '12px',
-                    color: '#ffffff',
+                    color: '#14281d',
                     fontSize: '0.92rem',
                     outline: 'none',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
                   }}
                 />
               </div>
             </div>
 
             <div>
-              <label style={{ display: 'block', color: '#d1d5db', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>
+              <label style={{ display: 'block', color: '#14281d', fontSize: '0.88rem', fontWeight: 700, marginBottom: '0.45rem' }}>
                 Password
               </label>
               <div style={{ position: 'relative' }}>
-                <Lock size={18} color="#9ca3af" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                <Lock size={18} color="#6b7280" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   type="password"
                   name="password"
@@ -298,13 +316,14 @@ export default function AuthModal({ user, setUser }) {
                   onChange={handleChange}
                   style={{
                     width: '100%',
-                    padding: '0.75rem 1rem 0.75rem 2.75rem',
-                    background: 'rgba(0, 0, 0, 0.4)',
-                    border: '1px solid rgba(52, 211, 153, 0.2)',
+                    padding: '0.8rem 1rem 0.8rem 2.75rem',
+                    background: '#ffffff',
+                    border: '1.5px solid #d1d5db',
                     borderRadius: '12px',
-                    color: '#ffffff',
+                    color: '#14281d',
                     fontSize: '0.92rem',
                     outline: 'none',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
                   }}
                 />
               </div>
@@ -316,7 +335,7 @@ export default function AuthModal({ user, setUser }) {
               className="btn-primary"
               style={{
                 width: '100%',
-                padding: '0.85rem',
+                padding: '0.9rem',
                 fontSize: '1rem',
                 marginTop: '0.5rem',
                 opacity: loading ? 0.7 : 1,
@@ -330,11 +349,11 @@ export default function AuthModal({ user, setUser }) {
           /* REGISTRATION FORM: 1-STEP DIRECT REGISTRATION */
           <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div>
-              <label style={{ display: 'block', color: '#d1d5db', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>
+              <label style={{ display: 'block', color: '#14281d', fontSize: '0.88rem', fontWeight: 700, marginBottom: '0.45rem' }}>
                 Full Name
               </label>
               <div style={{ position: 'relative' }}>
-                <UserIcon size={18} color="#9ca3af" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                <UserIcon size={18} color="#6b7280" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   type="text"
                   name="name"
@@ -344,24 +363,25 @@ export default function AuthModal({ user, setUser }) {
                   onChange={handleChange}
                   style={{
                     width: '100%',
-                    padding: '0.75rem 1rem 0.75rem 2.75rem',
-                    background: 'rgba(0, 0, 0, 0.4)',
-                    border: '1px solid rgba(52, 211, 153, 0.2)',
+                    padding: '0.8rem 1rem 0.8rem 2.75rem',
+                    background: '#ffffff',
+                    border: '1.5px solid #d1d5db',
                     borderRadius: '12px',
-                    color: '#ffffff',
+                    color: '#14281d',
                     fontSize: '0.92rem',
                     outline: 'none',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
                   }}
                 />
               </div>
             </div>
 
             <div>
-              <label style={{ display: 'block', color: '#d1d5db', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>
+              <label style={{ display: 'block', color: '#14281d', fontSize: '0.88rem', fontWeight: 700, marginBottom: '0.45rem' }}>
                 Email Address
               </label>
               <div style={{ position: 'relative' }}>
-                <Mail size={18} color="#9ca3af" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                <Mail size={18} color="#6b7280" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   type="email"
                   name="email"
@@ -371,24 +391,25 @@ export default function AuthModal({ user, setUser }) {
                   onChange={handleChange}
                   style={{
                     width: '100%',
-                    padding: '0.75rem 1rem 0.75rem 2.75rem',
-                    background: 'rgba(0, 0, 0, 0.4)',
-                    border: '1px solid rgba(52, 211, 153, 0.2)',
+                    padding: '0.8rem 1rem 0.8rem 2.75rem',
+                    background: '#ffffff',
+                    border: '1.5px solid #d1d5db',
                     borderRadius: '12px',
-                    color: '#ffffff',
+                    color: '#14281d',
                     fontSize: '0.92rem',
                     outline: 'none',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
                   }}
                 />
               </div>
             </div>
 
             <div>
-              <label style={{ display: 'block', color: '#d1d5db', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>
+              <label style={{ display: 'block', color: '#14281d', fontSize: '0.88rem', fontWeight: 700, marginBottom: '0.45rem' }}>
                 Password (min 6 characters)
               </label>
               <div style={{ position: 'relative' }}>
-                <Lock size={18} color="#9ca3af" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                <Lock size={18} color="#6b7280" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   type="password"
                   name="password"
@@ -399,20 +420,21 @@ export default function AuthModal({ user, setUser }) {
                   onChange={handleChange}
                   style={{
                     width: '100%',
-                    padding: '0.75rem 1rem 0.75rem 2.75rem',
-                    background: 'rgba(0, 0, 0, 0.4)',
-                    border: '1px solid rgba(52, 211, 153, 0.2)',
+                    padding: '0.8rem 1rem 0.8rem 2.75rem',
+                    background: '#ffffff',
+                    border: '1.5px solid #d1d5db',
                     borderRadius: '12px',
-                    color: '#ffffff',
+                    color: '#14281d',
                     fontSize: '0.92rem',
                     outline: 'none',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
                   }}
                 />
               </div>
             </div>
 
             <div>
-              <label style={{ display: 'block', color: '#d1d5db', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>
+              <label style={{ display: 'block', color: '#14281d', fontSize: '0.88rem', fontWeight: 700, marginBottom: '0.45rem' }}>
                 Farming Profile Type
               </label>
               <select
@@ -421,19 +443,20 @@ export default function AuthModal({ user, setUser }) {
                 onChange={handleChange}
                 style={{
                   width: '100%',
-                  padding: '0.75rem 1rem',
-                  background: 'rgba(0, 0, 0, 0.4)',
-                  border: '1px solid rgba(52, 211, 153, 0.2)',
+                  padding: '0.8rem 1rem',
+                  background: '#ffffff',
+                  border: '1.5px solid #d1d5db',
                   borderRadius: '12px',
-                  color: '#ffffff',
+                  color: '#14281d',
                   fontSize: '0.92rem',
                   outline: 'none',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
                 }}
               >
-                <option value="Farmer" style={{ background: '#111827' }}>Crop Farmer</option>
-                <option value="Gardener" style={{ background: '#111827' }}>Home Gardener / Horticulturist</option>
-                <option value="Agronomist" style={{ background: '#111827' }}>Agricultural Consultant / Agronomist</option>
-                <option value="Student" style={{ background: '#111827' }}>Agri Student / Researcher</option>
+                <option value="Farmer">Crop Farmer (फसल किसान)</option>
+                <option value="Gardener">Home Gardener / Horticulturist (बागवान)</option>
+                <option value="Agronomist">Agricultural Consultant / Agronomist (कृषि विशेषज्ञ)</option>
+                <option value="Student">Agri Student / Researcher (कृषि विद्यार्थी)</option>
               </select>
             </div>
 
@@ -443,7 +466,7 @@ export default function AuthModal({ user, setUser }) {
               className="btn-primary"
               style={{
                 width: '100%',
-                padding: '0.85rem',
+                padding: '0.9rem',
                 fontSize: '1rem',
                 marginTop: '0.5rem',
                 opacity: loading ? 0.7 : 1,

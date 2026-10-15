@@ -3,7 +3,7 @@ import {
   Camera, Upload, Scan, CheckCircle, AlertTriangle, XCircle, RefreshCw, 
   Leaf, Shield, Info, Save, Layers, Sparkles, ArrowRight, Volume2, 
   VolumeX, Play, Pause, MessageCircle, Calendar, Mic, X, ChevronRight, 
-  Sun, Zap, ArrowLeft, Check, HelpCircle, Share2
+  Sun, Zap, ArrowLeft, Check, HelpCircle, Share2, Sprout
 } from 'lucide-react';
 import { diseaseService } from '../services/api';
 
@@ -201,7 +201,7 @@ const SAMPLE_LEAF_PRESETS = [
   }
 ];
 
-export default function DiseaseDetector({ user }) {
+export default function DiseaseDetector({ user, onNavigateFarm }) {
   const [lang, setLang] = useState('hi'); // 'hi' | 'en'
   const t = I18N[lang];
 
@@ -467,8 +467,38 @@ export default function DiseaseDetector({ user }) {
   };
 
   const handleScheduleReminder = () => {
+    if (scanResult) {
+      const disease = scanResult.diseaseName || scanResult.disease_name;
+      const remedy = remedyTab === 'organic' 
+        ? (scanResult.organicRemedy || scanResult.organic_remedy)
+        : (scanResult.chemicalRemedy || scanResult.chemical_remedy);
+
+      const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+      const newTask = {
+        id: `task-${Date.now()}`,
+        farmId: 'farm-1',
+        farmName: `${scanResult.crop || 'Crop'} Plot`,
+        category: 'spray',
+        title: `${disease} Spray Treatment`,
+        dosage: remedy ? remedy.substring(0, 95) : 'Neem oil or standard fungicide spray',
+        date: tomorrow,
+        time: '07:00 AM',
+        completed: false,
+        urgent: true
+      };
+
+      try {
+        const existing = JSON.parse(localStorage.getItem('agri_bandhu_tasks') || '[]');
+        localStorage.setItem('agri_bandhu_tasks', JSON.stringify([newTask, ...existing]));
+      } catch (e) {}
+    }
+
     setShowScheduleToast(true);
-    setTimeout(() => setShowScheduleToast(false), 3000);
+    if (onNavigateFarm) {
+      setTimeout(() => {
+        onNavigateFarm();
+      }, 350);
+    }
   };
 
   return (
@@ -519,28 +549,54 @@ export default function DiseaseDetector({ user }) {
           </div>
         </div>
 
-        {/* Dual Language Switcher: अ / A */}
-        <button
-          onClick={() => setLang(lang === 'hi' ? 'en' : 'hi')}
-          style={{
-            background: 'rgba(255, 255, 255, 0.2)',
-            color: '#ffffff',
-            border: '1px solid rgba(255, 255, 255, 0.35)',
-            padding: '0.45rem 1.1rem',
-            borderRadius: '999px',
-            fontWeight: 800,
-            fontSize: '0.92rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          <span style={{ fontSize: '1.1rem', fontWeight: 900 }}>{lang === 'hi' ? 'अ' : 'A'}</span>
-          <span style={{ fontSize: '0.8rem', opacity: 0.9 }}>/ {lang === 'hi' ? 'English' : 'हिंदी'}</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          {onNavigateFarm && (
+            <button
+              onClick={onNavigateFarm}
+              style={{
+                background: 'rgba(255, 255, 255, 0.18)',
+                color: '#ffffff',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                padding: '0.45rem 1rem',
+                borderRadius: '999px',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Sprout size={16} color="#86efac" />
+              <span>{lang === 'hi' ? 'मेरा खेत व शेड्यूल' : 'My Farm & Schedule'}</span>
+            </button>
+          )}
+
+          {/* Dual Language Switcher: अ / A */}
+          <button
+            onClick={() => setLang(lang === 'hi' ? 'en' : 'hi')}
+            style={{
+              background: 'rgba(255, 255, 255, 0.2)',
+              color: '#ffffff',
+              border: '1px solid rgba(255, 255, 255, 0.35)',
+              padding: '0.45rem 1.1rem',
+              borderRadius: '999px',
+              fontWeight: 800,
+              fontSize: '0.92rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <span style={{ fontSize: '1.1rem', fontWeight: 900 }}>{lang === 'hi' ? 'अ' : 'A'}</span>
+            <span style={{ fontSize: '0.8rem', opacity: 0.9 }}>/ {lang === 'hi' ? 'English' : 'हिंदी'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Seasonal Alert Banner (from Screenshot 2 - Warm Amber Pill) */}
@@ -883,117 +939,6 @@ export default function DiseaseDetector({ user }) {
                 <span>{t.uploadGallery}</span>
               </button>
             </div>
-
-            {/* Recent Plots (मेरे खेत) Section from Screenshot 2 */}
-            <div style={{ marginTop: '2rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                <h4 style={{ fontSize: '1rem', color: '#14281d', fontWeight: 800, margin: 0 }}>
-                  {t.recentPlots}
-                </h4>
-                <span style={{ fontSize: '0.8rem', color: '#15803d', cursor: 'pointer', fontWeight: 700 }}>
-                  View All Plots →
-                </span>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.75rem' }}>
-                {/* Plot 1 */}
-                <div 
-                  onClick={() => handleSelectSample(SAMPLE_LEAF_PRESETS[0])}
-                  style={{
-                    background: '#ffffff',
-                    border: '1px solid #e5eae1',
-                    borderRadius: '16px',
-                    padding: '0.75rem',
-                    cursor: 'pointer',
-                    boxShadow: '0 2px 8px rgba(18, 57, 36, 0.05)',
-                    transition: 'all 0.25s ease'
-                  }}
-                >
-                  <img src="/images/crops/tomato.png" alt="Tomato" style={{ width: '100%', height: '80px', objectFit: 'cover', borderRadius: '10px' }} />
-                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#14281d', marginTop: '0.5rem' }}>
-                    {t.plot1Title}
-                  </div>
-                  <div style={{
-                    fontSize: '0.72rem',
-                    background: '#fffbeb',
-                    color: '#b45309',
-                    border: '1px solid #fde68a',
-                    padding: '0.15rem 0.5rem',
-                    borderRadius: '999px',
-                    display: 'inline-block',
-                    marginTop: '0.25rem',
-                    fontWeight: 700
-                  }}>
-                    {t.plot1Status}
-                  </div>
-                </div>
-
-                {/* Plot 2 */}
-                <div 
-                  onClick={() => handleSelectSample(SAMPLE_LEAF_PRESETS[1])}
-                  style={{
-                    background: '#ffffff',
-                    border: '1px solid #e5eae1',
-                    borderRadius: '16px',
-                    padding: '0.75rem',
-                    cursor: 'pointer',
-                    boxShadow: '0 2px 8px rgba(18, 57, 36, 0.05)',
-                    transition: 'all 0.25s ease'
-                  }}
-                >
-                  <img src="https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=600&q=80" alt="Potato" style={{ width: '100%', height: '80px', objectFit: 'cover', borderRadius: '10px' }} />
-                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#14281d', marginTop: '0.5rem' }}>
-                    {t.plot2Title}
-                  </div>
-                  <div style={{
-                    fontSize: '0.72rem',
-                    background: '#ecfdf5',
-                    color: '#059669',
-                    border: '1px solid #a7f3d0',
-                    padding: '0.15rem 0.5rem',
-                    borderRadius: '999px',
-                    display: 'inline-block',
-                    marginTop: '0.25rem',
-                    fontWeight: 700
-                  }}>
-                    {t.plot2Status}
-                  </div>
-                </div>
-
-                {/* Plot 3 */}
-                <div 
-                  onClick={() => handleSelectSample(SAMPLE_LEAF_PRESETS[2])}
-                  style={{
-                    background: '#ffffff',
-                    border: '1px solid #e5eae1',
-                    borderRadius: '16px',
-                    padding: '0.75rem',
-                    cursor: 'pointer',
-                    boxShadow: '0 2px 8px rgba(18, 57, 36, 0.05)',
-                    transition: 'all 0.25s ease'
-                  }}
-                >
-                  <img src="https://images.unsplash.com/photo-1601593346740-925612772716?auto=format&fit=crop&w=600&q=80" alt="Corn" style={{ width: '100%', height: '80px', objectFit: 'cover', borderRadius: '10px' }} />
-                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#14281d', marginTop: '0.5rem' }}>
-                    {t.plot3Title}
-                  </div>
-                  <div style={{
-                    fontSize: '0.72rem',
-                    background: '#fffbeb',
-                    color: '#d97706',
-                    border: '1px solid #fde68a',
-                    padding: '0.15rem 0.5rem',
-                    borderRadius: '999px',
-                    display: 'inline-block',
-                    marginTop: '0.25rem',
-                    fontWeight: 700
-                  }}>
-                    {t.plot3Status}
-                  </div>
-                </div>
-              </div>
-            </div>
-
           </div>
         </div>
 
@@ -1025,27 +970,54 @@ export default function DiseaseDetector({ user }) {
                   </div>
                 </div>
 
-                {/* Audio Listen Button from Screenshot 1 */}
-                <button
-                  onClick={() => toggleAudioSpeech()}
-                  style={{
-                    background: isPlayingAudio ? '#fef2f2' : '#f0fdf4',
-                    border: `1px solid ${isPlayingAudio ? '#fecaca' : '#bbf7d0'}`,
-                    color: isPlayingAudio ? '#dc2626' : '#15803d',
-                    padding: '0.5rem 1.1rem',
-                    borderRadius: '999px',
-                    fontWeight: 700,
-                    fontSize: '0.85rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.45rem',
-                    boxShadow: '0 2px 8px rgba(22, 101, 52, 0.08)'
-                  }}
-                >
-                  {isPlayingAudio ? <VolumeX size={16} /> : <Volume2 size={16} />}
-                  <span>{isPlayingAudio ? t.stopAudio : t.listen}</span>
-                </button>
+                {/* Top Action Buttons: Retake Photo & Audio Listen */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <button
+                    onClick={() => {
+                      setSelectedImage(null);
+                      setScanResult(null);
+                      startCamera();
+                    }}
+                    style={{
+                      background: '#ffffff',
+                      border: '1px solid #d1d5db',
+                      color: '#374151',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '999px',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.04)'
+                    }}
+                  >
+                    <RefreshCw size={15} />
+                    <span>{t.retakePhoto}</span>
+                  </button>
+
+                  <button
+                    onClick={() => toggleAudioSpeech()}
+                    style={{
+                      background: isPlayingAudio ? '#fef2f2' : '#f0fdf4',
+                      border: `1px solid ${isPlayingAudio ? '#fecaca' : '#bbf7d0'}`,
+                      color: isPlayingAudio ? '#dc2626' : '#15803d',
+                      padding: '0.5rem 1.1rem',
+                      borderRadius: '999px',
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.45rem',
+                      boxShadow: '0 2px 8px rgba(22, 101, 52, 0.08)'
+                    }}
+                  >
+                    {isPlayingAudio ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                    <span>{isPlayingAudio ? t.stopAudio : t.listen}</span>
+                  </button>
+                </div>
               </div>
 
               {/* Severity Meter (from Screenshot 1 & 2) */}
@@ -1071,104 +1043,6 @@ export default function DiseaseDetector({ user }) {
                   <div className={`severity-step ${getSeverityLevel() === 'severe' ? 'active-severe' : ''}`}>
                     {t.severe}
                   </div>
-                </div>
-              </div>
-
-              {/* Side-by-Side Leaf Comparison Card (Matching Screenshot 1 & 2) */}
-              <div style={{
-                background: '#f8faf6',
-                border: '1px solid #e2ebd8',
-                borderRadius: '18px',
-                padding: '1.1rem',
-                marginBottom: '1.5rem'
-              }}>
-                <div style={{ fontSize: '0.9rem', color: '#14281d', fontWeight: 700, marginBottom: '0.85rem', textAlign: 'center' }}>
-                  {t.doesLeafLookLike}
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
-                  {/* Your Photo */}
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ position: 'relative', height: '115px', borderRadius: '14px', overflow: 'hidden', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>
-                      <img src={scanResult.image || selectedImage} alt="Your Leaf" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                    <span style={{ fontSize: '0.8rem', color: '#4b5563', fontWeight: 600, display: 'block', marginTop: '0.4rem' }}>
-                      {t.yourPhoto}
-                    </span>
-                  </div>
-
-                  {/* Target Reference Photo with checkmark */}
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ position: 'relative', height: '115px', borderRadius: '14px', overflow: 'hidden', border: '2.5px solid #16a34a', boxShadow: '0 2px 8px rgba(22, 163, 74, 0.2)' }}>
-                      <img src={scanResult.referenceImg || REFERENCE_SYMPTOM_IMAGES['default']} alt="Reference" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <div style={{
-                        position: 'absolute',
-                        top: '7px',
-                        right: '7px',
-                        background: '#16a34a',
-                        borderRadius: '50%',
-                        width: '22px',
-                        height: '22px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#ffffff',
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
-                      }}>
-                        <Check size={14} strokeWidth={3} />
-                      </div>
-                    </div>
-                    <span style={{ fontSize: '0.8rem', color: '#15803d', fontWeight: 800, display: 'block', marginTop: '0.4rem' }}>
-                      {t.targetReference}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Yes View Remedy & Retake Actions */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '0.75rem', marginTop: '1rem' }}>
-                  <button
-                    onClick={() => {
-                      document.getElementById('treatment-deck')?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    style={{
-                      background: 'linear-gradient(135deg, #16482e 0%, #0e2a1b 100%)',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '12px',
-                      padding: '0.7rem 0.9rem',
-                      fontWeight: 700,
-                      fontSize: '0.85rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.3rem',
-                      boxShadow: '0 3px 10px rgba(18, 57, 36, 0.25)'
-                    }}
-                  >
-                    <span>✓ {t.yesViewRemedy}</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setSelectedImage(null);
-                      setScanResult(null);
-                      startCamera();
-                    }}
-                    style={{
-                      background: '#ffffff',
-                      border: '1px solid #cbd5e1',
-                      color: '#374151',
-                      borderRadius: '12px',
-                      padding: '0.7rem 0.9rem',
-                      fontWeight: 600,
-                      fontSize: '0.85rem',
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
-                    }}
-                  >
-                    ↺ {t.retakePhoto}
-                  </button>
                 </div>
               </div>
 
@@ -1486,38 +1360,7 @@ export default function DiseaseDetector({ user }) {
 
       </div>
 
-      {/* Preset Samples Bar */}
-      <div style={{ marginTop: '2.5rem' }}>
-        <h4 style={{ color: '#14281d', fontSize: '0.95rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '0.04em' }}>
-          🌿 {t.samplePresets}:
-        </h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-          {SAMPLE_LEAF_PRESETS.map((sample) => (
-            <div
-              key={sample.id}
-              onClick={() => handleSelectSample(sample)}
-              className="glass-panel"
-              style={{
-                padding: '0.85rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.85rem',
-                border: '1px solid #e5eae1',
-                boxShadow: '0 2px 8px rgba(18, 57, 36, 0.04)'
-              }}
-            >
-              <img src={sample.image} alt={sample.name} style={{ width: '48px', height: '48px', borderRadius: '10px', objectFit: 'cover' }} />
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#14281d' }}>{sample.name}</div>
-                <div style={{ fontSize: '0.75rem', color: sample.status === 'healthy' ? '#059669' : '#d97706', fontWeight: 600 }}>
-                  {sample.diseaseName.split('(')[0]}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+
 
       {/* Voice Assistant / Ask Question Modal (Screenshot 2) */}
       {showVoiceModal && (

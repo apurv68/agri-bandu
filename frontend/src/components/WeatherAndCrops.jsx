@@ -264,15 +264,15 @@ export default function WeatherAndCrops() {
     <div style={{ maxWidth: '1250px', margin: '2rem auto', padding: '0 1rem' }}>
       
       {/* SECTION 1: LIVE WEATHER & FARMING ADVISORY */}
-      <div className="glass-panel" style={{ padding: '2.5rem', marginBottom: '2.5rem' }}>
+      <div className="glass-panel" style={{ padding: '2.5rem', marginBottom: '2.5rem', background: '#ffffff', border: '1px solid #e5eae1' }}>
         
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.25rem', marginBottom: '2rem' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', color: '#34d399', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', color: '#15803d', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               <CloudSun size={18} />
               <span>Real-Time Agronomic Weather Engine</span>
             </div>
-            <h2 style={{ fontSize: '2.2rem', color: '#ffffff', fontWeight: 800, marginTop: '0.3rem' }}>
+            <h2 style={{ fontSize: '2rem', color: '#14281d', fontWeight: 800, marginTop: '0.3rem' }}>
               Weather Advisory & Crop Risk Gauge
             </h2>
           </div>
@@ -280,7 +280,7 @@ export default function WeatherAndCrops() {
           {/* Search Bar for Cities */}
           <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '0.5rem' }}>
             <div style={{ position: 'relative' }}>
-              <Search size={16} color="#9ca3af" style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)' }} />
+              <Search size={16} color="#6b7280" style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)' }} />
               <input
                 type="text"
                 placeholder="Search city (e.g. Jaipur, Patna)..."
@@ -288,13 +288,14 @@ export default function WeatherAndCrops() {
                 onChange={(e) => setSearchCity(e.target.value)}
                 style={{
                   padding: '0.7rem 1rem 0.7rem 2.6rem',
-                  background: 'rgba(0, 0, 0, 0.4)',
-                  border: '1px solid rgba(52, 211, 153, 0.3)',
+                  background: '#ffffff',
+                  border: '1.5px solid #d1d5db',
                   borderRadius: '12px',
-                  color: '#ffffff',
+                  color: '#14281d',
                   fontSize: '0.9rem',
                   outline: 'none',
                   width: '260px',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
                 }}
               />
             </div>
@@ -309,71 +310,72 @@ export default function WeatherAndCrops() {
           
           {/* Main Temperature Card */}
           <div style={{
-            background: 'linear-gradient(135deg, rgba(6, 78, 59, 0.5) 0%, rgba(12, 26, 20, 0.8) 100%)',
-            border: '1px solid rgba(52, 211, 153, 0.3)',
+            background: 'linear-gradient(135deg, #123924 0%, #0a1f14 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
             borderRadius: '20px',
             padding: '1.75rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            boxShadow: '0 8px 25px rgba(18, 57, 36, 0.25)'
           }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#a7f3d0', fontSize: '0.9rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#a7f3d0', fontSize: '0.9rem', fontWeight: 600 }}>
                 <MapPin size={16} color="#34d399" />
                 <span>{locationSubtext}</span>
               </div>
               <div style={{ fontSize: '3.4rem', fontWeight: 800, color: '#ffffff', lineHeight: 1.1, margin: '0.4rem 0' }}>
                 {currentWeather.temp}°C
               </div>
-              <div style={{ color: '#34d399', fontWeight: 700, fontSize: '0.95rem' }}>
+              <div style={{ color: '#86efac', fontWeight: 700, fontSize: '0.95rem' }}>
                 {currentWeather.condition}
               </div>
             </div>
-            <CloudSun size={68} color="#34d399" style={{ opacity: 0.9 }} />
+            <CloudSun size={68} color="#86efac" style={{ opacity: 0.95 }} />
           </div>
 
           {/* Weather Metrics Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div style={{ background: 'rgba(0, 0, 0, 0.3)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', padding: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#9ca3af', fontSize: '0.8rem' }}>
-                <Droplets size={14} color="#38bdf8" /> Humidity
+            <div style={{ background: '#f8faf6', border: '1px solid #e2ebd8', borderRadius: '16px', padding: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#4b5563', fontSize: '0.82rem', fontWeight: 600 }}>
+                <Droplets size={15} color="#0284c7" /> Humidity
               </div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#ffffff', marginTop: '0.2rem' }}>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#14281d', marginTop: '0.25rem' }}>
                 {currentWeather.humidity}%
               </div>
             </div>
 
-            <div style={{ background: 'rgba(0, 0, 0, 0.3)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', padding: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#9ca3af', fontSize: '0.8rem' }}>
-                <Wind size={14} color="#a7f3d0" /> Wind Velocity
+            <div style={{ background: '#f8faf6', border: '1px solid #e2ebd8', borderRadius: '16px', padding: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#4b5563', fontSize: '0.82rem', fontWeight: 600 }}>
+                <Wind size={15} color="#059669" /> Wind Velocity
               </div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#ffffff', marginTop: '0.2rem' }}>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#14281d', marginTop: '0.25rem' }}>
                 {currentWeather.wind}
               </div>
             </div>
 
-            <div style={{ background: 'rgba(0, 0, 0, 0.3)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', padding: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#9ca3af', fontSize: '0.8rem' }}>
-                <CloudRain size={14} color="#60a5fa" /> Rain Prob.
+            <div style={{ background: '#f8faf6', border: '1px solid #e2ebd8', borderRadius: '16px', padding: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#4b5563', fontSize: '0.82rem', fontWeight: 600 }}>
+                <CloudRain size={15} color="#2563eb" /> Rain Prob.
               </div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#ffffff', marginTop: '0.2rem' }}>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#14281d', marginTop: '0.25rem' }}>
                 {currentWeather.rainChance}
               </div>
             </div>
 
-            <div style={{ background: 'rgba(0, 0, 0, 0.3)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', padding: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#9ca3af', fontSize: '0.8rem' }}>
-                <Sun size={14} color="#fbbf24" /> UV Index
+            <div style={{ background: '#f8faf6', border: '1px solid #e2ebd8', borderRadius: '16px', padding: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#4b5563', fontSize: '0.82rem', fontWeight: 600 }}>
+                <Sun size={15} color="#d97706" /> UV Index
               </div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#ffffff', marginTop: '0.2rem' }}>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#14281d', marginTop: '0.25rem' }}>
                 {currentWeather.uv} / 10
               </div>
             </div>
           </div>
 
           {/* 5-Day Mini Forecast */}
-          <div style={{ background: 'rgba(0, 0, 0, 0.3)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '20px', padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div style={{ fontSize: '0.85rem', color: '#34d399', fontWeight: 700, marginBottom: '0.75rem', textTransform: 'uppercase' }}>
+          <div style={{ background: '#f8faf6', border: '1px solid #e2ebd8', borderRadius: '20px', padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div style={{ fontSize: '0.85rem', color: '#15803d', fontWeight: 800, marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
               5-Day Agro Forecast
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
@@ -381,9 +383,9 @@ export default function WeatherAndCrops() {
                 const IconComponent = fd.icon || CloudSun;
                 return (
                   <div key={idx} style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.78rem', color: '#9ca3af' }}>{fd.day}</div>
-                    <IconComponent size={20} color="#34d399" style={{ margin: '0.4rem 0' }} />
-                    <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#ffffff' }}>{fd.temp}</div>
+                    <div style={{ fontSize: '0.78rem', color: '#6b7280', fontWeight: 600 }}>{fd.day}</div>
+                    <IconComponent size={22} color="#15803d" style={{ margin: '0.4rem auto' }} />
+                    <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#14281d' }}>{fd.temp}</div>
                   </div>
                 );
               })}
@@ -394,22 +396,23 @@ export default function WeatherAndCrops() {
 
         {/* AI Agro Advisory Card */}
         <div style={{
-          background: 'rgba(16, 185, 129, 0.08)',
-          border: '1px solid rgba(52, 211, 153, 0.3)',
-          borderRadius: '16px',
+          background: '#f0fdf4',
+          border: '1.5px solid #bbf7d0',
+          borderRadius: '18px',
           padding: '1.25rem 1.5rem',
           display: 'flex',
           alignItems: 'center',
           gap: '1rem',
+          boxShadow: '0 2px 10px rgba(22, 101, 52, 0.06)'
         }}>
-          <div style={{ background: 'rgba(16, 185, 129, 0.2)', padding: '0.6rem', borderRadius: '12px', flexShrink: 0 }}>
-            <ShieldAlert size={24} color="#34d399" />
+          <div style={{ background: '#dcfce7', padding: '0.65rem', borderRadius: '12px', flexShrink: 0 }}>
+            <ShieldAlert size={26} color="#15803d" />
           </div>
           <div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#34d399' }}>
+            <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#166534' }}>
               AI Agronomist Field Advisory
             </div>
-            <p style={{ color: '#e5e7eb', fontSize: '0.9rem', marginTop: '0.2rem' }}>
+            <p style={{ color: '#14532d', fontSize: '0.9rem', marginTop: '0.2rem', lineHeight: 1.5 }}>
               {currentWeather.alert}
             </p>
           </div>
@@ -418,21 +421,21 @@ export default function WeatherAndCrops() {
       </div>
 
       {/* SECTION 2: CROP DIRECTORY & AGRONOMY GUIDES */}
-      <div className="glass-panel" style={{ padding: '2.5rem' }}>
+      <div className="glass-panel" style={{ padding: '2.5rem', background: '#ffffff', border: '1px solid #e5eae1' }}>
         
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#34d399', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#15803d', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               <BookOpen size={18} />
               <span>Agronomy Cultivation Database</span>
             </div>
-            <h2 style={{ fontSize: '2.2rem', color: '#ffffff', fontWeight: 800, marginTop: '0.3rem' }}>
+            <h2 style={{ fontSize: '2rem', color: '#14281d', fontWeight: 800, marginTop: '0.3rem' }}>
               Crop Agronomy Directory & Yield Guide
             </h2>
           </div>
 
           {/* Season Filter Pills */}
-          <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(0, 0, 0, 0.4)', padding: '0.3rem', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', background: '#f1f5f9', padding: '0.3rem', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
             {['All', 'Kharif', 'Rabi'].map((season) => (
               <button
                 key={season}
@@ -441,12 +444,13 @@ export default function WeatherAndCrops() {
                   padding: '0.5rem 1.1rem',
                   borderRadius: '10px',
                   border: 'none',
-                  background: selectedSeason === season ? '#10b981' : 'transparent',
-                  color: selectedSeason === season ? '#ffffff' : '#9ca3af',
+                  background: selectedSeason === season ? '#16a34a' : 'transparent',
+                  color: selectedSeason === season ? '#ffffff' : '#4b5563',
                   fontWeight: 700,
                   fontSize: '0.85rem',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
+                  boxShadow: selectedSeason === season ? '0 2px 6px rgba(22, 163, 74, 0.25)' : 'none'
                 }}
               >
                 {season === 'All' ? 'All Seasons' : `${season} Crop`}
@@ -462,47 +466,59 @@ export default function WeatherAndCrops() {
               key={crop.id}
               onClick={() => setSelectedCrop(crop)}
               style={{
-                background: 'rgba(0, 0, 0, 0.4)',
-                border: '1px solid rgba(52, 211, 153, 0.2)',
+                background: '#ffffff',
+                border: '1px solid #e5eae1',
                 borderRadius: '20px',
                 overflow: 'hidden',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
+                boxShadow: '0 4px 16px rgba(18, 57, 36, 0.06)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.boxShadow = '0 10px 25px rgba(18, 57, 36, 0.12)';
+                e.currentTarget.style.borderColor = '#bbf7d0';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(18, 57, 36, 0.06)';
+                e.currentTarget.style.borderColor = '#e5eae1';
               }}
             >
-              <div style={{ position: 'relative', height: '170px' }}>
+              <div style={{ position: 'relative', height: '175px' }}>
                 <img src={crop.image} alt={crop.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 <span style={{
                   position: 'absolute',
                   top: '0.85rem',
                   right: '0.85rem',
-                  background: 'rgba(10, 17, 14, 0.85)',
-                  color: '#34d399',
-                  border: '1px solid rgba(52, 211, 153, 0.4)',
+                  background: '#ffffff',
+                  color: '#15803d',
+                  border: '1px solid #bbf7d0',
                   padding: '0.25rem 0.75rem',
                   borderRadius: '999px',
                   fontSize: '0.78rem',
-                  fontWeight: 700,
+                  fontWeight: 800,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                 }}>
                   {crop.season}
                 </span>
               </div>
 
-              <div style={{ padding: '1.25rem' }}>
-                <h3 style={{ fontSize: '1.2rem', color: '#ffffff', fontWeight: 800 }}>
+              <div style={{ padding: '1.25rem', background: '#ffffff' }}>
+                <h3 style={{ fontSize: '1.25rem', color: '#14281d', fontWeight: 800 }}>
                   {crop.name}
                 </h3>
-                <p style={{ color: '#9ca3af', fontSize: '0.84rem', marginTop: '0.3rem', height: '40px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <p style={{ color: '#4b5563', fontSize: '0.85rem', marginTop: '0.35rem', height: '42px', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.45 }}>
                   {crop.description}
                 </p>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)', fontSize: '0.82rem' }}>
-                  <span style={{ color: '#34d399', fontWeight: 700 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #f1f5f9', fontSize: '0.82rem' }}>
+                  <span style={{ color: '#15803d', background: '#f0fdf4', padding: '0.3rem 0.65rem', borderRadius: '8px', fontWeight: 700, border: '1px solid #dcfce7' }}>
                     MSP: {crop.msp}
                   </span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#e5e7eb', fontWeight: 700 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#16a34a', fontWeight: 700 }}>
                     <span>Details</span>
-                    <ArrowRight size={14} color="#34d399" />
+                    <ArrowRight size={14} color="#16a34a" />
                   </div>
                 </div>
               </div>
@@ -518,75 +534,78 @@ export default function WeatherAndCrops() {
           position: 'fixed',
           inset: 0,
           zIndex: 1000,
-          background: 'rgba(0, 0, 0, 0.75)',
+          background: 'rgba(10, 25, 18, 0.65)',
           backdropFilter: 'blur(8px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           padding: '1rem',
         }}>
-          <div className="glass-panel" style={{ maxWidth: '600px', width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: '2rem', position: 'relative' }}>
+          <div className="glass-panel" style={{ maxWidth: '620px', width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: '2rem', position: 'relative', background: '#ffffff', borderRadius: '24px', border: '1px solid #e5eae1', boxShadow: '0 20px 50px rgba(0,0,0,0.2)' }}>
             <button
               onClick={() => setSelectedCrop(null)}
               style={{
                 position: 'absolute',
                 top: '1.25rem',
                 right: '1.25rem',
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: 'none',
-                color: '#ffffff',
-                padding: '0.4rem',
+                background: '#f1f5f9',
+                border: '1px solid #e2e8f0',
+                color: '#374151',
+                padding: '0.45rem',
                 borderRadius: '50%',
                 cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
-              <X size={20} />
+              <X size={18} />
             </button>
 
-            <img src={selectedCrop.image} alt={selectedCrop.name} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '16px', marginBottom: '1.25rem' }} />
+            <img src={selectedCrop.image} alt={selectedCrop.name} style={{ width: '100%', height: '210px', objectFit: 'cover', borderRadius: '18px', marginBottom: '1.25rem', border: '1px solid #e5eae1' }} />
 
-            <h3 style={{ fontSize: '1.6rem', color: '#ffffff', fontWeight: 800 }}>
+            <h3 style={{ fontSize: '1.65rem', color: '#14281d', fontWeight: 800 }}>
               {selectedCrop.name}
             </h3>
-            <p style={{ color: '#d1d5db', fontSize: '0.92rem', marginTop: '0.4rem' }}>
+            <p style={{ color: '#4b5563', fontSize: '0.92rem', marginTop: '0.4rem', lineHeight: 1.5 }}>
               {selectedCrop.description}
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
-              <div style={{ background: 'rgba(0, 0, 0, 0.4)', padding: '0.85rem', borderRadius: '12px' }}>
-                <span style={{ fontSize: '0.78rem', color: '#9ca3af' }}>Soil Requirement</span>
-                <div style={{ fontSize: '0.88rem', color: '#ffffff', fontWeight: 700, marginTop: '0.2rem' }}>
+              <div style={{ background: '#f8faf6', border: '1px solid #e2ebd8', padding: '0.85rem', borderRadius: '14px' }}>
+                <span style={{ fontSize: '0.78rem', color: '#6b7280', fontWeight: 600 }}>Soil Requirement</span>
+                <div style={{ fontSize: '0.88rem', color: '#14281d', fontWeight: 700, marginTop: '0.2rem' }}>
                   {selectedCrop.soil}
                 </div>
               </div>
 
-              <div style={{ background: 'rgba(0, 0, 0, 0.4)', padding: '0.85rem', borderRadius: '12px' }}>
-                <span style={{ fontSize: '0.78rem', color: '#9ca3af' }}>Optimal Temp. Range</span>
-                <div style={{ fontSize: '0.88rem', color: '#34d399', fontWeight: 700, marginTop: '0.2rem' }}>
+              <div style={{ background: '#f8faf6', border: '1px solid #e2ebd8', padding: '0.85rem', borderRadius: '14px' }}>
+                <span style={{ fontSize: '0.78rem', color: '#6b7280', fontWeight: 600 }}>Optimal Temp. Range</span>
+                <div style={{ fontSize: '0.88rem', color: '#15803d', fontWeight: 800, marginTop: '0.2rem' }}>
                   {selectedCrop.tempRange}
                 </div>
               </div>
 
-              <div style={{ background: 'rgba(0, 0, 0, 0.4)', padding: '0.85rem', borderRadius: '12px' }}>
-                <span style={{ fontSize: '0.78rem', color: '#9ca3af' }}>Crop Duration</span>
-                <div style={{ fontSize: '0.88rem', color: '#ffffff', fontWeight: 700, marginTop: '0.2rem' }}>
+              <div style={{ background: '#f8faf6', border: '1px solid #e2ebd8', padding: '0.85rem', borderRadius: '14px' }}>
+                <span style={{ fontSize: '0.78rem', color: '#6b7280', fontWeight: 600 }}>Crop Duration</span>
+                <div style={{ fontSize: '0.88rem', color: '#14281d', fontWeight: 700, marginTop: '0.2rem' }}>
                   {selectedCrop.duration}
                 </div>
               </div>
 
-              <div style={{ background: 'rgba(0, 0, 0, 0.4)', padding: '0.85rem', borderRadius: '12px' }}>
-                <span style={{ fontSize: '0.78rem', color: '#9ca3af' }}>Average Acre Yield</span>
-                <div style={{ fontSize: '0.88rem', color: '#fbbf24', fontWeight: 700, marginTop: '0.2rem' }}>
+              <div style={{ background: '#f8faf6', border: '1px solid #e2ebd8', padding: '0.85rem', borderRadius: '14px' }}>
+                <span style={{ fontSize: '0.78rem', color: '#6b7280', fontWeight: 600 }}>Average Acre Yield</span>
+                <div style={{ fontSize: '0.88rem', color: '#b45309', fontWeight: 800, marginTop: '0.2rem' }}>
                   {selectedCrop.yield}
                 </div>
               </div>
             </div>
 
-            <div style={{ marginTop: '1.25rem', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(52, 211, 153, 0.3)', padding: '1rem', borderRadius: '12px' }}>
-              <span style={{ fontSize: '0.82rem', color: '#34d399', fontWeight: 700, textTransform: 'uppercase' }}>
+            <div style={{ marginTop: '1.25rem', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '1rem 1.25rem', borderRadius: '14px' }}>
+              <span style={{ fontSize: '0.82rem', color: '#15803d', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                 Irrigation Schedule
               </span>
-              <p style={{ color: '#e5e7eb', fontSize: '0.88rem', marginTop: '0.25rem' }}>
+              <p style={{ color: '#166534', fontSize: '0.88rem', marginTop: '0.3rem', lineHeight: 1.5 }}>
                 {selectedCrop.waterReq}
               </p>
             </div>
