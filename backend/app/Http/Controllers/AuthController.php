@@ -209,6 +209,55 @@ class AuthController extends Controller
         }
     }
 
+    public function googleLogin(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'name' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Valid Google email is required.',
+            ], 422);
+        }
+
+        try {
+            $email = strtolower(trim($request->email));
+            $name = $request->name ? trim($request->name) : explode('@', $email)[0];
+
+            $user = User::firstOrCreate(
+                ['email' => $email],
+                [
+                    'name' => $name,
+                    'password' => Hash::make(bin2hex(random_bytes(16))),
+                    'role' => $request->role ?? 'Farmer',
+                    'email_verified_at' => now(),
+                ]
+            );
+
+            $token = bin2hex(random_bytes(32));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Google Login successful! Welcome to Agri Bandhu.',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role ?? 'Farmer',
+                ],
+                'token' => $token,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Google Authentication Error: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function logout(Request $request)
     {
         return response()->json([

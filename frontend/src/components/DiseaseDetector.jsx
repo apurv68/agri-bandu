@@ -3,9 +3,11 @@ import {
   Camera, Upload, Scan, CheckCircle, AlertTriangle, XCircle, RefreshCw, 
   Leaf, Shield, Info, Save, Layers, Sparkles, ArrowRight, Volume2, 
   VolumeX, Play, Pause, MessageCircle, Calendar, Mic, X, ChevronRight, 
-  Sun, Zap, ArrowLeft, Check, HelpCircle, Share2, Sprout
+  Sun, Zap, ArrowLeft, Check, HelpCircle, Share2, Sprout, Key, Lock, LogIn, CheckCircle2, Bot, MicOff
 } from 'lucide-react';
 import { diseaseService } from '../services/api';
+import { geminiService } from '../services/geminiService';
+
 
 // Reference samples for interactive leaf comparison
 const REFERENCE_SYMPTOM_IMAGES = {
@@ -201,9 +203,9 @@ const SAMPLE_LEAF_PRESETS = [
   }
 ];
 
-export default function DiseaseDetector({ user, onNavigateFarm }) {
-  const [lang, setLang] = useState('hi'); // 'hi' | 'en'
-  const t = I18N[lang];
+export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang = 'hi', setLang }) {
+  const t = I18N[lang] || I18N.hi;
+
 
   const [selectedImage, setSelectedImage] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -216,7 +218,15 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
   const [userQuestion, setUserQuestion] = useState('');
   const [aiAnswer, setAiAnswer] = useState('');
   const [isAnsweringVoice, setIsAnsweringVoice] = useState(false);
+  const [isListeningVoice, setIsListeningVoice] = useState(false);
   const [showScheduleToast, setShowScheduleToast] = useState(false);
+
+  // Fix 4: Gemini API Key State & Dynamic Cure Formulation
+  const [geminiKey, setGeminiKey] = useState(() => geminiService.getApiKey());
+  const [showKeyModal, setShowKeyModal] = useState(false);
+  const [keyInputValue, setKeyInputValue] = useState('');
+  const [keyTestStatus, setKeyTestStatus] = useState(null); // null | 'testing' | 'success' | 'error'
+  const [isGeneratingCure, setIsGeneratingCure] = useState(false);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -228,49 +238,130 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
       }
+      window.__agriUtterance = null;
     };
   }, []);
 
-  // Text-To-Speech Speech Synthesis for Farmers
+  // Update Gemini Dynamic Cures on Language Switch
+  useEffect(() => {
+    if (scanResult && scanResult.status !== 'invalid' && !scanResult.diseaseName?.includes('Non-Leaf')) {
+      geminiService.fetchDynamicCure({
+        crop: scanResult.crop,
+        diseaseName: scanResult.diseaseName || scanResult.disease_name,
+        scientificName: scanResult.scientificName || '',
+        symptoms: scanResult.symptoms || [],
+        lang
+      }).then(updated => {
+        if (updated) {
+          setScanResult(prev => prev ? ({
+            ...prev,
+            organicRemedy: updated.organicRemedy || prev.organicRemedy,
+            chemicalRemedy: updated.chemicalRemedy || prev.chemicalRemedy,
+            prevention: updated.prevention || prev.prevention,
+            audioGuideScript: updated.audioGuideScript,
+            cureSource: updated.source
+          }) : null);
+        }
+      }).catch(() => {});
+    }
+  }, [lang]);
+
+  // Fix 5: Android APK & Web Robust Speech Synthesis
   const toggleAudioSpeech = (textOverride = null) => {
     if (!('speechSynthesis' in window)) {
-      alert('Text-to-speech audio is not supported in this browser.');
+      alert(lang === 'hi' ? 'इस डिवाइस पर ऑडियो वाचन समर्थित नहीं है।' : 'Text-to-speech audio is not supported on this device.');
       return;
     }
 
     if (isPlayingAudio) {
       window.speechSynthesis.cancel();
       setIsPlayingAudio(false);
+      window.__agriUtterance = null;
       return;
     }
 
     let speechText = textOverride;
     if (!speechText && scanResult) {
-      const disease = scanResult.diseaseName || scanResult.disease_name;
-      const remedy = remedyTab === 'organic' 
-        ? (scanResult.organicRemedy || scanResult.organic_remedy)
-        : (scanResult.chemicalRemedy || scanResult.chemical_remedy);
-      speechText = lang === 'hi' 
-        ? `फसल में ${disease} के लक्षण पाए गए हैं। उपचार के लिए: ${remedy}`
-        : `Detected ${disease}. Recommended treatment: ${remedy}`;
+      if (scanResult.audioGuideScript) {
+        speechText = scanResult.audioGuideScript;
+      } else {
+        const disease = scanResult.diseaseName || scanResult.disease_name;
+        const remedy = remedyTab === 'organic' 
+          ? (scanResult.organicRemedy || scanResult.organic_remedy)
+          : (scanResult.chemicalRemedy || scanResult.chemical_remedy);
+        speechText = lang === 'hi' 
+          ? `फसल में ${disease} के लक्षण पाए गए हैं। उपचार के लिए: ${remedy}`
+          : `Detected ${disease}. Recommended treatment: ${remedy}`;
+      }
     }
 
     if (!speechText) return;
 
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(speechText);
-    utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
-    utterance.rate = 0.95;
+    // Clean markdown characters (*, #, _, `)
+    const cleanSpeech = speechText.replace(/[*#_`]/g, '').trim();
 
-    utterance.onend = () => setIsPlayingAudio(false);
-    utterance.onerror = () => setIsPlayingAudio(false);
+    // Android WebView Fix 1: cancel stuck speech queue
+    window.speechSynthesis.cancel();
+
+    // Android WebView Fix 2: resume paused engine
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
+
+    const utterance = new SpeechSynthesisUtterance(cleanSpeech);
+    utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
+    utterance.rate = 0.92;
+    utterance.pitch = 1.0;
+
+    // Android WebView Fix 3: save reference to prevent garbage collection mid-speech
+    window.__agriUtterance = utterance;
+
+    // Find best voice if available
+    const voices = window.speechSynthesis.getVoices();
+    if (voices && voices.length > 0) {
+      const matchPrefix = lang === 'hi' ? 'hi' : 'en';
+      const matchedVoice = voices.find(v => v.lang.toLowerCase().startsWith(matchPrefix));
+      if (matchedVoice) {
+        utterance.voice = matchedVoice;
+      }
+    }
+
+    utterance.onstart = () => {
+      setIsPlayingAudio(true);
+    };
+
+    utterance.onend = () => {
+      setIsPlayingAudio(false);
+      window.__agriUtterance = null;
+    };
+
+    utterance.onerror = (e) => {
+      console.warn('Speech synthesis error:', e);
+      setIsPlayingAudio(false);
+      window.__agriUtterance = null;
+    };
 
     window.speechSynthesis.speak(utterance);
     setIsPlayingAudio(true);
+
+    // Android WebView Fix 4: keepalive interval so speech doesn't pause after 15s
+    const keepAlive = setInterval(() => {
+      if (!window.speechSynthesis.speaking) {
+        clearInterval(keepAlive);
+      } else {
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+      }
+    }, 4500);
   };
 
-  // Start Camera with guided viewfinder
+  // Fix 7: Enforce login before starting camera
   const startCamera = async () => {
+    if (!user) {
+      if (onOpenAuth) onOpenAuth();
+      return;
+    }
+
     try {
       setCameraActive(true);
       setSelectedImage(null);
@@ -318,7 +409,13 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
     });
   };
 
+  // Fix 7: Enforce login before photo capture
   const capturePhoto = async () => {
+    if (!user) {
+      if (onOpenAuth) onOpenAuth();
+      return;
+    }
+
     if (videoRef.current && canvasRef.current) {
       const context = canvasRef.current.getContext('2d');
       const w = videoRef.current.videoWidth || 1280;
@@ -333,7 +430,14 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
     }
   };
 
+  // Fix 7: Enforce login before gallery upload
   const handleFileChange = (e) => {
+    if (!user) {
+      if (e.target) e.target.value = '';
+      if (onOpenAuth) onOpenAuth();
+      return;
+    }
+
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -347,7 +451,60 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
     }
   };
 
+  // Fix 4: Enhance with Dynamic Gemini Agronomist Cure
+  const enhanceWithGeminiCure = async (diagnosis, image, matchedReference, scan_id = null) => {
+    // Set immediate base diagnosis
+    setScanResult({
+      ...diagnosis,
+      image,
+      referenceImg: matchedReference,
+      scan_id,
+      cureSource: 'loading'
+    });
+    setSavedSuccess(true);
+
+    if (diagnosis.status === 'invalid' || diagnosis.diseaseName?.includes('Non-Leaf')) {
+      return;
+    }
+
+    // Call Gemini API for dynamic cure
+    setIsGeneratingCure(true);
+    try {
+      const dynamicCure = await geminiService.fetchDynamicCure({
+        crop: diagnosis.crop,
+        diseaseName: diagnosis.diseaseName || diagnosis.disease_name,
+        scientificName: diagnosis.scientificName || '',
+        symptoms: diagnosis.symptoms || [],
+        lang
+      });
+
+      if (dynamicCure) {
+        setScanResult(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            organicRemedy: dynamicCure.organicRemedy || prev.organicRemedy,
+            chemicalRemedy: dynamicCure.chemicalRemedy || prev.chemicalRemedy,
+            prevention: dynamicCure.prevention || prev.prevention,
+            audioGuideScript: dynamicCure.audioGuideScript,
+            cureSource: dynamicCure.source
+          };
+        });
+      }
+    } catch (e) {
+      console.warn('Gemini dynamic cure fetch error:', e);
+    } finally {
+      setIsGeneratingCure(false);
+    }
+  };
+
+  // Fix 7: Enforce login before sample preset click
   const handleSelectSample = async (sample) => {
+    if (!user) {
+      if (onOpenAuth) onOpenAuth();
+      return;
+    }
+
     setSelectedImage(sample.image);
     stopCamera();
     setIsScanning(true);
@@ -355,7 +512,6 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
     setSavedSuccess(false);
 
     try {
-      // If sample image is a relative URL, fetch and convert to base64 so server receives the real leaf image
       let scanPayload = sample.image;
       if (sample.image.startsWith('/')) {
         try {
@@ -375,21 +531,12 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
       if (res && res.diagnosis && res.diagnosis.status !== 'invalid' && !res.diagnosis.diseaseName?.includes('Non-Leaf')) {
         const predictedClass = res.diagnosis.predicted_class || '';
         const matchedReference = REFERENCE_SYMPTOM_IMAGES[predictedClass] || sample.referenceImg || sample.image;
-        setScanResult({ 
-          ...sample, 
-          ...res.diagnosis, 
-          image: sample.image,
-          referenceImg: matchedReference
-        });
-        setSavedSuccess(true);
+        await enhanceWithGeminiCure(res.diagnosis, sample.image, matchedReference, res.scan_id);
       } else {
-        // Fallback to verified preset pathology for sample card
-        setScanResult(sample);
-        setSavedSuccess(true);
+        await enhanceWithGeminiCure(sample, sample.image, sample.referenceImg || sample.image);
       }
     } catch (e) {
-      setScanResult(sample);
-      setSavedSuccess(true);
+      await enhanceWithGeminiCure(sample, sample.image, sample.referenceImg || sample.image);
     } finally {
       setIsScanning(false);
     }
@@ -406,14 +553,7 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
       if (res && res.diagnosis) {
         const predictedClass = res.diagnosis.predicted_class || '';
         const matchedReference = REFERENCE_SYMPTOM_IMAGES[predictedClass] || REFERENCE_SYMPTOM_IMAGES['default'];
-
-        setScanResult({
-          ...res.diagnosis,
-          image: imgSrc,
-          referenceImg: matchedReference,
-          scan_id: res.scan_id
-        });
-        setSavedSuccess(true);
+        await enhanceWithGeminiCure(res.diagnosis, imgSrc, matchedReference, res.scan_id);
       } else {
         setScanResult({
           crop: 'Network / Server Notice',
@@ -446,8 +586,6 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
     }
   };
 
-
-
   // Severity calculator based on status & confidence
   const getSeverityLevel = () => {
     if (!scanResult) return 'moderate';
@@ -457,29 +595,107 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
     return 'mild';
   };
 
-  // Farmer Voice Question Handler
-  const handleAskQuestion = (q) => {
+  // Fix 5: Gemini AI Conversational Voice Advisor & Cross-Questioning
+  const handleAskQuestion = async (customQuestion = null) => {
+    const q = (customQuestion || userQuestion).trim();
+    if (!q) return;
+
     setIsAnsweringVoice(true);
-    setTimeout(() => {
-      let reply = '';
-      const textLower = (q || userQuestion).toLowerCase();
-      if (textLower.includes('neem') || textLower.includes('spray') || textLower.includes('छिड़काव')) {
-        reply = lang === 'hi' 
-          ? 'नीम के तेल का छिड़काव सुबह 7-9 बजे या शाम को 5 बजे के बाद करें जब धूप तेज न हो।' 
-          : 'Spray neem oil emulsion in the early morning or evening when direct sunlight is low.';
-      } else if (textLower.includes('water') || textLower.includes('पानी')) {
-        reply = lang === 'hi'
-          ? 'पत्तियों पर ऊपर से पानी न डालें। केवल जड़ों में ड्रिप या क्यारी विधि से सिंचाई करें।'
-          : 'Avoid wetting the leaves directly. Irrigate at the root zone to prevent fungal spread.';
-      } else {
-        reply = lang === 'hi'
-          ? 'लक्षण मध्यम अवस्था में हैं। नीचे की खराब पत्तियों को तुरंत तोड़कर खेत से दूर नष्ट करें।'
-          : 'Symptoms are moderate. Prune infected lower foliage immediately and burn or bury away from field.';
-      }
+    setAiAnswer('');
+
+    try {
+      const reply = await geminiService.askVoiceAdvisor({
+        question: q,
+        crop: scanResult?.crop || 'Crop',
+        diseaseName: scanResult?.diseaseName || scanResult?.disease_name || 'Plant Health',
+        lang
+      });
       setAiAnswer(reply);
-      setIsAnsweringVoice(false);
       toggleAudioSpeech(reply);
-    }, 900);
+    } catch (err) {
+      console.error('Error asking Gemini voice advisor:', err);
+      const fallbackReply = lang === 'hi' 
+        ? 'लक्षणों के आधार पर सुबह के समय 5ml/L नीम तेल के घोल का छिड़काव करें और संक्रमित पत्तियों को हटाएं।'
+        : 'Based on diagnosis, spray 5ml/L neem oil emulsion early in the morning and remove damaged foliage.';
+      setAiAnswer(fallbackReply);
+      toggleAudioSpeech(fallbackReply);
+    } finally {
+      setIsAnsweringVoice(false);
+    }
+  };
+
+  // Fix 5: Speech-to-Text Microphone Recording
+  const startVoiceRecording = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert(lang === 'hi' ? 'वॉइस पहचान आपके ब्राउज़र में उपलब्ध नहीं है। कृपया सवाल लिखकर पूछें।' : 'Speech recognition not available. Please type your question.');
+      return;
+    }
+
+    if (isListeningVoice) {
+      setIsListeningVoice(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        setIsListeningVoice(true);
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          setUserQuestion(transcript);
+          setIsListeningVoice(false);
+          handleAskQuestion(transcript);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('Speech recognition error:', event.error);
+        setIsListeningVoice(false);
+      };
+
+      recognition.onend = () => {
+        setIsListeningVoice(false);
+      };
+
+      recognition.start();
+    } catch (e) {
+      console.warn('Could not start recognition:', e);
+      setIsListeningVoice(false);
+    }
+  };
+
+  // Test and Save Gemini API Key
+  const handleSaveGeminiKey = async () => {
+    const cleanKey = keyInputValue.trim();
+    setKeyTestStatus('testing');
+
+    if (!cleanKey) {
+      geminiService.setApiKey('');
+      setGeminiKey('');
+      setKeyTestStatus('success');
+      setTimeout(() => setShowKeyModal(false), 800);
+      return;
+    }
+
+    try {
+      geminiService.setApiKey(cleanKey);
+      // Run quick test query to verify key with Google
+      await geminiService.generateContent('Hi', 'Reply with OK');
+      setGeminiKey(cleanKey);
+      setKeyTestStatus('success');
+      setTimeout(() => setShowKeyModal(false), 900);
+    } catch (err) {
+      console.error('Gemini Key verification failed:', err);
+      setKeyTestStatus('error');
+    }
   };
 
   const handleShareWhatsApp = () => {
@@ -574,7 +790,35 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+          {/* Fix 4: Gemini AI Key Status Button */}
+          <button
+            onClick={() => {
+              setKeyInputValue(geminiKey || '');
+              setKeyTestStatus(null);
+              setShowKeyModal(true);
+            }}
+            style={{
+              background: geminiKey ? 'rgba(34, 197, 94, 0.25)' : 'rgba(255, 255, 255, 0.18)',
+              color: '#ffffff',
+              border: geminiKey ? '1px solid rgba(74, 222, 128, 0.5)' : '1px solid rgba(255, 255, 255, 0.3)',
+              padding: '0.45rem 0.95rem',
+              borderRadius: '999px',
+              fontWeight: 700,
+              fontSize: '0.82rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+              transition: 'all 0.2s ease'
+            }}
+            title="Configure Google Gemini API Key"
+          >
+            <Sparkles size={15} color={geminiKey ? '#86efac' : '#fde047'} />
+            <span>{geminiKey ? (lang === 'hi' ? 'Gemini AI एक्टिव' : 'Gemini AI Active') : (lang === 'hi' ? '🔑 Gemini Key' : '🔑 Gemini Key')}</span>
+          </button>
+
           {onNavigateFarm && (
             <button
               onClick={onNavigateFarm}
@@ -623,6 +867,56 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
           </button>
         </div>
       </div>
+
+      {/* Fix 7: Mandatory Login Warning Banner if user is not signed in */}
+      {!user && (
+        <div style={{
+          background: '#fef2f2',
+          border: '1.5px solid #fecaca',
+          borderRadius: '18px',
+          padding: '1.1rem 1.4rem',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          boxShadow: '0 4px 15px rgba(220, 38, 38, 0.08)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '12px',
+              background: '#fee2e2',
+              border: '1px solid #fca5a5',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Lock size={22} color="#dc2626" />
+            </div>
+            <div>
+              <div style={{ color: '#991b1b', fontWeight: 800, fontSize: '0.98rem' }}>
+                {lang === 'hi' ? '🔒 पत्ती जांच के लिए लॉगिन अनिवार्य है' : '🔒 Login Required to Scan Crop Leaves'}
+              </div>
+              <div style={{ color: '#7f1d1d', fontSize: '0.84rem', marginTop: '0.15rem' }}>
+                {lang === 'hi' ? 'अपनी फसल के रोग की जांच, सटीक जेमिनी उपचार और इतिहास सुरक्षित रखने के लिए कृपया पहले लॉगिन करें।' : 'Please sign in to scan plant leaves, formulate Gemini AI remedies, and save diagnostic history.'}
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={onOpenAuth}
+            className="btn-primary"
+            style={{ padding: '0.65rem 1.4rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <LogIn size={18} />
+            <span>{lang === 'hi' ? 'लॉगिन / साइन अप करें' : 'Sign In to Scan'}</span>
+          </button>
+        </div>
+      )}
 
       {/* Seasonal Alert Banner (from Screenshot 2 - Warm Amber Pill) */}
       <div style={{
@@ -1127,10 +1421,35 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
 
               {/* Treatment Deck Section (from Screenshot 1 & 2) */}
               <div id="treatment-deck" style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ fontSize: '1.05rem', color: '#14281d', fontWeight: 800, marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Layers size={19} color="#15803d" />
-                  <span>{t.treatmentDeck}</span>
-                </h4>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <h4 style={{ fontSize: '1.05rem', color: '#14281d', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Layers size={19} color="#15803d" />
+                    <span>{t.treatmentDeck}</span>
+                  </h4>
+
+                  {/* Fix 4: Live Gemini Cure Status Badge */}
+                  <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    background: scanResult.cureSource === 'gemini' ? '#ecfdf5' : '#f8fafc',
+                    border: `1px solid ${scanResult.cureSource === 'gemini' ? '#a7f3d0' : '#e2e8f0'}`,
+                    color: scanResult.cureSource === 'gemini' ? '#047857' : '#64748b',
+                    padding: '0.35rem 0.75rem',
+                    borderRadius: '999px',
+                    fontSize: '0.78rem',
+                    fontWeight: 700
+                  }}>
+                    <Sparkles size={14} color={scanResult.cureSource === 'gemini' ? '#10b981' : '#94a3b8'} />
+                    <span>
+                      {isGeneratingCure 
+                        ? (lang === 'hi' ? '✨ जेमिनी एआई उपचार तैयार हो रहा है...' : '✨ Formulating Gemini AI cure...')
+                        : scanResult.cureSource === 'gemini'
+                          ? (lang === 'hi' ? '✨ Gemini 1.5 Flash AI उपचार' : '✨ Gemini 1.5 Flash AI Cure')
+                          : (lang === 'hi' ? 'कृषि संस्तुति उपचार' : 'Agronomist Protocol')}
+                    </span>
+                  </div>
+                </div>
 
                 {/* Treatment Deck Tabs */}
                 <div style={{
@@ -1408,25 +1727,102 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
             border: '1px solid #e5eae1',
             boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#15803d', fontWeight: 800 }}>
-                <Mic size={20} />
-                <span>{lang === 'hi' ? 'कृषि मित्र से सवाल पूछें' : 'Ask Agronomist Question'}</span>
+                <Bot size={22} />
+                <span>{lang === 'hi' ? 'जेमिनी एआई कृषि विशेषज्ञ से पूछें' : 'Gemini AI Agronomist Voice Advisor'}</span>
               </div>
               <button 
-                onClick={() => { setShowVoiceModal(false); setAiAnswer(''); }}
+                onClick={() => { 
+                  setShowVoiceModal(false); 
+                  setAiAnswer(''); 
+                  setIsListeningVoice(false);
+                  if (isPlayingAudio) {
+                    window.speechSynthesis.cancel();
+                    setIsPlayingAudio(false);
+                  }
+                }}
                 style={{ background: 'transparent', border: 'none', color: '#6b7280', cursor: 'pointer' }}
               >
                 <X size={20} />
               </button>
             </div>
 
-            <p style={{ color: '#4b5563', fontSize: '0.85rem', marginBottom: '1rem' }}>
-              {lang === 'hi' 
-                ? 'छिड़काव का समय, पानी की मात्रा या अन्य दवाओं के बारे में पूछें:' 
-                : 'Ask about spray timings, dosage amounts, or weather precautions:'}
-            </p>
+            {/* Gemini Live AI Status Badge */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: '#f0fdf4',
+              border: '1px solid #bbf7d0',
+              padding: '0.45rem 0.85rem',
+              borderRadius: '10px',
+              marginBottom: '1rem',
+              fontSize: '0.8rem',
+              color: '#166534',
+              fontWeight: 600
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Sparkles size={14} color="#15803d" />
+                <span>{geminiKey ? 'Gemini 1.5 Flash AI Active' : (lang === 'hi' ? 'Gemini API Key सेट करें' : 'Set Gemini API Key')}</span>
+              </div>
+              <button
+                onClick={() => {
+                  setShowVoiceModal(false);
+                  setKeyInputValue(geminiKey || '');
+                  setKeyTestStatus(null);
+                  setShowKeyModal(true);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#15803d',
+                  fontWeight: 700,
+                  fontSize: '0.78rem',
+                  cursor: 'pointer',
+                  textDecoration: 'underline'
+                }}
+              >
+                {lang === 'hi' ? 'कुंजी बदलें' : 'Edit Key'}
+              </button>
+            </div>
 
+            {/* Central Animated Voice Recording Button (Fix 5) */}
+            <div style={{ textAlign: 'center', margin: '1.25rem 0' }}>
+              <button
+                type="button"
+                onClick={startVoiceRecording}
+                style={{
+                  width: '74px',
+                  height: '74px',
+                  borderRadius: '50%',
+                  background: isListeningVoice 
+                    ? '#dc2626' 
+                    : 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
+                  border: isListeningVoice ? '4px solid #fecaca' : '4px solid #bbf7d0',
+                  color: '#ffffff',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: isListeningVoice 
+                    ? '0 0 25px rgba(220, 38, 38, 0.6)' 
+                    : '0 4px 20px rgba(22, 163, 74, 0.35)',
+                  transition: 'all 0.2s ease',
+                  animation: isListeningVoice ? 'pulse 1.2s infinite' : 'none'
+                }}
+                title={lang === 'hi' ? 'बोलने के लिए माइक दबाएं' : 'Tap to speak'}
+              >
+                <Mic size={32} />
+              </button>
+              <div style={{ marginTop: '0.6rem', fontSize: '0.85rem', fontWeight: 700, color: isListeningVoice ? '#dc2626' : '#374151' }}>
+                {isListeningVoice 
+                  ? (lang === 'hi' ? '🔴 आपकी आवाज सुनी जा रही है... बोलें' : '🔴 Listening to your voice... Speak now') 
+                  : (lang === 'hi' ? 'माइक दबाकर बोलें या नीचे लिखें' : 'Tap mic to speak or type below')}
+              </div>
+            </div>
+
+            {/* Text Input Row */}
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
               <input
                 type="text"
@@ -1448,7 +1844,7 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
                 onClick={() => handleAskQuestion(userQuestion)}
                 className="btn-primary"
                 style={{ padding: '0.75rem 1.25rem' }}
-                disabled={isAnsweringVoice}
+                disabled={isAnsweringVoice || !userQuestion.trim()}
               >
                 {isAnsweringVoice ? '...' : (lang === 'hi' ? 'पूछें' : 'Ask')}
               </button>
@@ -1459,7 +1855,7 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
               {[
                 lang === 'hi' ? 'नीम तेल कब छिड़कें?' : 'Best time to spray neem oil?',
                 lang === 'hi' ? 'सिंचाई कब करें?' : 'When to irrigate?',
-                lang === 'hi' ? 'पत्तियां काटना जरूरी है?' : 'Should I prune leaves?'
+                lang === 'hi' ? 'दवा की सही मात्रा क्या है?' : 'What is the exact dosage?'
               ].map((chip, idx) => (
                 <button
                   key={idx}
@@ -1480,19 +1876,41 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
               ))}
             </div>
 
-            {/* AI Agronomist Answer */}
+            {/* AI Agronomist Answer Display */}
             {aiAnswer && (
               <div style={{
                 background: '#f0fdf4',
                 border: '1px solid #bbf7d0',
-                padding: '1rem',
+                padding: '1.1rem',
                 borderRadius: '14px',
                 color: '#14281d',
-                fontSize: '0.88rem',
-                lineHeight: '1.5'
+                fontSize: '0.9rem',
+                lineHeight: '1.6'
               }}>
-                <div style={{ fontWeight: 800, color: '#15803d', marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                  <Sparkles size={15} /> Agri Bandhu Advisor:
+                <div style={{ fontWeight: 800, color: '#15803d', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <Sparkles size={16} />
+                    <span>Agri Bandhu Gemini Advisor:</span>
+                  </div>
+                  <button
+                    onClick={() => toggleAudioSpeech(aiAnswer)}
+                    style={{
+                      background: isPlayingAudio ? '#fef2f2' : '#ffffff',
+                      border: `1px solid ${isPlayingAudio ? '#fecaca' : '#bbf7d0'}`,
+                      color: isPlayingAudio ? '#dc2626' : '#15803d',
+                      padding: '0.25rem 0.65rem',
+                      borderRadius: '999px',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.3rem'
+                    }}
+                  >
+                    {isPlayingAudio ? <VolumeX size={13} /> : <Volume2 size={13} />}
+                    <span>{isPlayingAudio ? (lang === 'hi' ? 'रोकें' : 'Stop') : (lang === 'hi' ? 'सुनें' : 'Listen')}</span>
+                  </button>
                 </div>
                 {aiAnswer}
               </div>
@@ -1501,6 +1919,124 @@ export default function DiseaseDetector({ user, onNavigateFarm }) {
         </div>
       )}
 
+      {/* Fix 4: Gemini API Key Setup Modal for Web & APK */}
+      {showKeyModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(10, 20, 16, 0.65)',
+          backdropFilter: 'blur(6px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '1rem'
+        }}>
+          <div className="glass-panel" style={{
+            maxWidth: '460px',
+            width: '100%',
+            padding: '2rem',
+            background: '#ffffff',
+            border: '1px solid #e5eae1',
+            borderRadius: '20px',
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#15803d', fontWeight: 800 }}>
+                <Key size={22} />
+                <span>{lang === 'hi' ? 'Google Gemini API Key' : 'Configure Gemini API Key'}</span>
+              </div>
+              <button 
+                onClick={() => setShowKeyModal(false)}
+                style={{ background: 'transparent', border: 'none', color: '#6b7280', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <p style={{ color: '#4b5563', fontSize: '0.86rem', lineHeight: '1.5', marginBottom: '1.25rem' }}>
+              {lang === 'hi' 
+                ? 'रोग पहचान के बाद गतिशील जैविक व रासायनिक उपचार नुस्खे बनाने तथा वॉइस सलाहकार के लिए अपनी Google Gemini API कुंजी दर्ज करें।' 
+                : 'Enter your Google Gemini API key to formulate real-time customized disease treatments and power the voice agronomist advisor.'}
+            </p>
+
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#14281d', marginBottom: '0.4rem' }}>
+                Gemini API Key (Google AI Studio)
+              </label>
+              <input
+                type="password"
+                value={keyInputValue}
+                onChange={(e) => { setKeyInputValue(e.target.value); setKeyTestStatus(null); }}
+                placeholder="AIzaSy..."
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  background: '#f8faf6',
+                  border: '1.5px solid #cbd5e1',
+                  borderRadius: '12px',
+                  color: '#14281d',
+                  fontSize: '0.92rem',
+                  outline: 'none'
+                }}
+              />
+              <div style={{ fontSize: '0.76rem', color: '#6b7280', marginTop: '0.4rem' }}>
+                {lang === 'hi' ? 'मुफ्त कुंजी प्राप्त करें:' : 'Get free key from:'} <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: '#15803d', fontWeight: 700 }}>Google AI Studio</a>
+              </div>
+            </div>
+
+            {keyTestStatus === 'success' && (
+              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '0.75rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+                <CheckCircle2 size={18} color="#166534" />
+                <span>{lang === 'hi' ? 'Gemini API सफलतापूर्वक कनेक्ट हो गई!' : 'Gemini API verified and saved successfully!'}</span>
+              </div>
+            )}
+
+            {keyTestStatus === 'error' && (
+              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '0.75rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+                <AlertTriangle size={18} color="#dc2626" />
+                <span>{lang === 'hi' ? 'अमान्य API कुंजी या नेटवर्क त्रुटि। कृपया कुंजी जांचें।' : 'Invalid API key or network error. Please verify your key.'}</span>
+              </div>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setKeyInputValue('');
+                  geminiService.setApiKey('');
+                  setGeminiKey('');
+                  setShowKeyModal(false);
+                }}
+                style={{
+                  background: '#f3f4f6',
+                  border: 'none',
+                  padding: '0.75rem',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  color: '#4b5563',
+                  cursor: 'pointer'
+                }}
+              >
+                {lang === 'hi' ? 'कुंजी हटाएं' : 'Clear Key'}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSaveGeminiKey}
+                disabled={keyTestStatus === 'testing'}
+                className="btn-primary"
+                style={{ padding: '0.75rem', fontSize: '0.88rem' }}
+              >
+                {keyTestStatus === 'testing' ? 'Testing...' : (lang === 'hi' ? 'सहेजें व टेस्ट करें' : 'Save & Test')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
+

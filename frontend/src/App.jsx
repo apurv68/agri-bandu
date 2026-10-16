@@ -63,9 +63,16 @@ class ErrorBoundary extends Component {
   }
 }
 
+import { TRANSLATIONS } from './translations';
+
 export default function App() {
   const [activePage, setActivePage] = useState('detector'); // 'auth' | 'detector' | 'weather' | 'farm'
   const [user, setUser] = useState(null);
+  const [lang, setLang] = useState(() => localStorage.getItem('agri_lang') || 'hi');
+
+  useEffect(() => {
+    localStorage.setItem('agri_lang', lang);
+  }, [lang]);
 
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
@@ -79,6 +86,8 @@ export default function App() {
     setUser(null);
   };
 
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.hi;
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
@@ -89,6 +98,8 @@ export default function App() {
         user={user}
         onOpenAuth={() => setActivePage('auth')}
         onLogout={handleLogout}
+        lang={lang}
+        setLang={setLang}
       />
 
       {/* Main Content View Switcher */}
@@ -99,24 +110,31 @@ export default function App() {
               user={user}
               setUser={setUser}
               onScanRedirect={() => setActivePage('detector')}
+              lang={lang}
             />
           )}
 
           {activePage === 'detector' && (
             <DiseaseDetector 
               user={user} 
-              onNavigateFarm={() => setActivePage('farm')} 
+              onNavigateFarm={() => setActivePage('farm')}
+              onOpenAuth={() => setActivePage('auth')}
+              lang={lang}
+              setLang={setLang}
             />
           )}
 
           {activePage === 'weather' && (
-            <WeatherAndCrops />
+            <WeatherAndCrops 
+              lang={lang}
+            />
           )}
 
           {activePage === 'farm' && (
             <FarmManager 
               user={user} 
-              onScanRedirect={() => setActivePage('detector')} 
+              onScanRedirect={() => setActivePage('detector')}
+              lang={lang}
             />
           )}
         </main>
@@ -135,11 +153,11 @@ export default function App() {
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff', fontWeight: 600 }}>
             <img src="/agri-logo.png" alt="Logo" style={{ width: '22px', height: '22px', borderRadius: '6px' }} />
-            <span>Agri Bandhu (कृषि बंधु) - Empowering Modern Farming</span>
+            <span>{t.footerTagline}</span>
           </div>
 
           <div style={{ fontSize: '0.8rem', color: '#a7f3d0' }}>
-            Built with <Heart size={13} color="#ef4444" style={{ display: 'inline', margin: '0 2px' }} /> for Agricultural Innovation
+            {t.footerLove}
           </div>
         </div>
       </footer>
@@ -147,3 +165,4 @@ export default function App() {
     </div>
   );
 }
+

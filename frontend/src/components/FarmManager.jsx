@@ -4,6 +4,7 @@ import {
   Trash2, MapPin, Layers, Droplet, Shield, Scissors, Sparkles,
   ChevronRight, X, Bell, Check, Edit2
 } from 'lucide-react';
+import { TRANSLATIONS } from '../translations';
 
 const CROPS_LIST = [
   { id: 'tomato', name: 'Tomato (टमाटर)', icon: '🍅', duration: '90-120 days' },
@@ -17,102 +18,57 @@ const CROPS_LIST = [
 ];
 
 const TASK_CATEGORIES = [
-  { id: 'spray', label: 'Spraying / दवा छिड़काव', icon: Shield, color: '#d97706', bg: '#fffbeb' },
-  { id: 'irrigation', label: 'Irrigation / सिंचाई', icon: Droplet, color: '#2563eb', bg: '#eff6ff' },
-  { id: 'fertilizer', label: 'Fertilizer / खाद-उर्वरक', icon: Sprout, color: '#16a34a', bg: '#f0fdf4' },
-  { id: 'pruning', label: 'Weeding & Pruning / निराई-कटाई', icon: Scissors, color: '#9333ea', bg: '#faf5ff' },
-  { id: 'harvest', label: 'Harvesting / फसल कटाई', icon: Calendar, color: '#ea580c', bg: '#fff7ed' }
+  { id: 'spray', labelEn: 'Spraying', labelHi: 'दवा छिड़काव', icon: Shield, color: '#d97706', bg: '#fffbeb' },
+  { id: 'irrigation', labelEn: 'Irrigation', labelHi: 'सिंचाई', icon: Droplet, color: '#2563eb', bg: '#eff6ff' },
+  { id: 'fertilizer', labelEn: 'Fertilizer', labelHi: 'खाद-उर्वरक', icon: Sprout, color: '#16a34a', bg: '#f0fdf4' },
+  { id: 'pruning', labelEn: 'Weeding & Pruning', labelHi: 'निराई-कटाई', icon: Scissors, color: '#9333ea', bg: '#faf5ff' },
+  { id: 'harvest', labelEn: 'Harvesting', labelHi: 'फसल कटाई', icon: Calendar, color: '#ea580c', bg: '#fff7ed' }
 ];
 
 const GROWTH_STAGES = [
-  '🌱 Germination (अंकुरण)',
-  '🌿 Vegetative Growth (वृद्धि)',
-  '🌸 Flowering Stage (फूल आना)',
-  '🍅 Fruiting Stage (फल लगना)',
-  '🌾 Maturity & Harvest (परिपक्वता)'
+  { en: '🌱 Germination', hi: '🌱 अंकुरण' },
+  { en: '🌿 Vegetative Growth', hi: '🌿 वानस्पतिक वृद्धि' },
+  { en: '🌸 Flowering Stage', hi: '🌸 फूल आने की अवस्था' },
+  { en: '🍅 Fruiting Stage', hi: '🍅 फल / दाना लगना' },
+  { en: '🌾 Maturity & Harvest', hi: '🌾 परिपक्वता एवं कटाई' }
 ];
 
-const DEFAULT_FARMS = [
-  {
-    id: 'farm-1',
-    name: 'Plot A - North Field (उत्तर खेत)',
-    location: 'Noida, Sector 135',
-    size: '2.5 Acres',
-    soilType: 'Alluvial (जलोढ़ मिट्टी)',
-    crop: 'Tomato (टमाटर)',
-    cropVariety: 'Pusa Ruby',
-    sowingDate: '2026-09-15',
-    harvestDate: '2026-12-20',
-    stage: '🌸 Flowering Stage (फूल आना)',
-    health: 'Under Treatment (झुलसा उपचार)'
-  },
-  {
-    id: 'farm-2',
-    name: 'Plot B - Tubewell Block (नलकूप खेत)',
-    location: 'Noida Village',
-    size: '4.0 Acres',
-    soilType: 'Loam (दोमट मिट्टी)',
-    crop: 'Potato (आलू)',
-    cropVariety: 'Kufri Jyoti',
-    sowingDate: '2026-10-01',
-    harvestDate: '2027-01-15',
-    stage: '🌿 Vegetative Growth (वृद्धि)',
-    health: 'Healthy (स्वस्थ)'
-  }
-];
+export default function FarmManager({ user, onScanRedirect, lang = 'hi' }) {
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.hi;
 
-const DEFAULT_TASKS = [
-  {
-    id: 'task-1',
-    farmId: 'farm-1',
-    farmName: 'Plot A - North Field',
-    category: 'spray',
-    title: 'Neem Oil Spray for Early Blight (नीम तेल छिड़काव)',
-    dosage: '5 ml Neem Oil per 1L water + 2 drops mild soap',
-    date: '2026-10-16',
-    time: '07:00 AM',
-    completed: false,
-    urgent: true
-  },
-  {
-    id: 'task-2',
-    farmId: 'farm-1',
-    farmName: 'Plot A - North Field',
-    category: 'irrigation',
-    title: 'Drip Irrigation Session (ड्रिप सिंचाई 2 घंटे)',
-    dosage: 'Root-zone watering only, keep leaves dry',
-    date: '2026-10-17',
-    time: '06:30 AM',
-    completed: false,
-    urgent: false
-  },
-  {
-    id: 'task-3',
-    farmId: 'farm-2',
-    farmName: 'Plot B - Tubewell Block',
-    category: 'fertilizer',
-    title: 'Urea Top Dressing & Bio-NPK (यूरिया एवं जैव उर्वरक)',
-    dosage: '40 kg per acre before secondary watering',
-    date: '2026-10-18',
-    time: '08:00 AM',
-    completed: false,
-    urgent: false
-  }
-];
+  // Clean empty initialization scoped to user account (Fix 2: No fake preloaded default farms/tasks)
+  const storageUserKey = user ? (user.id || user.email) : 'guest';
+  const farmsKey = `agri_farms_${storageUserKey}`;
+  const tasksKey = `agri_tasks_${storageUserKey}`;
 
-export default function FarmManager({ user, onScanRedirect }) {
-  // Load persisted farms & tasks from localStorage
   const [farms, setFarms] = useState(() => {
-    const saved = localStorage.getItem('agri_bandhu_farms');
-    return saved ? JSON.parse(saved) : DEFAULT_FARMS;
+    const saved = localStorage.getItem(farmsKey);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Exclude legacy dummy farms
+        return parsed.filter(f => f.id !== 'farm-1' && f.id !== 'farm-2');
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
   });
 
   const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem('agri_bandhu_tasks');
-    return saved ? JSON.parse(saved) : DEFAULT_TASKS;
+    const saved = localStorage.getItem(tasksKey);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Exclude legacy dummy tasks
+        return parsed.filter(t => t.id !== 'task-1' && t.id !== 'task-2' && t.id !== 'task-3');
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
   });
 
-  const [activeTab, setActiveTab] = useState('farms'); // 'farms' | 'tasks' | 'calendar'
   const [taskFilter, setTaskFilter] = useState('all'); // 'all' | 'pending' | 'completed'
   const [selectedFarmId, setSelectedFarmId] = useState(farms[0]?.id || '');
 
@@ -123,15 +79,15 @@ export default function FarmManager({ user, onScanRedirect }) {
   // New Farm form state
   const [newFarm, setNewFarm] = useState({
     name: '',
-    location: 'Noida, UP',
-    size: '2 Acres',
-    soilType: 'Alluvial (जलोढ़ मिट्टी)',
+    location: '',
+    size: '',
+    soilType: lang === 'hi' ? 'जलोढ़ दोमट मिट्टी' : 'Alluvial Loam',
     crop: 'Tomato (टमाटर)',
     cropVariety: 'Standard Hybrid',
     sowingDate: new Date().toISOString().split('T')[0],
     harvestDate: '',
-    stage: GROWTH_STAGES[1],
-    health: 'Healthy (स्वस्थ)'
+    stage: lang === 'hi' ? '🌿 वानस्पतिक वृद्धि' : '🌿 Vegetative Growth',
+    health: lang === 'hi' ? 'स्वस्थ (Healthy)' : 'Healthy'
   });
 
   // New Task form state
@@ -141,18 +97,17 @@ export default function FarmManager({ user, onScanRedirect }) {
     title: '',
     dosage: '',
     date: new Date().toISOString().split('T')[0],
-    time: '07:00 AM',
-    repeat: 'none'
+    time: '07:00 AM'
   });
 
-  // Sync to localStorage
+  // Persist to localStorage per user
   useEffect(() => {
-    localStorage.setItem('agri_bandhu_farms', JSON.stringify(farms));
-  }, [farms]);
+    localStorage.setItem(farmsKey, JSON.stringify(farms));
+  }, [farms, farmsKey]);
 
   useEffect(() => {
-    localStorage.setItem('agri_bandhu_tasks', JSON.stringify(tasks));
-  }, [tasks]);
+    localStorage.setItem(tasksKey, JSON.stringify(tasks));
+  }, [tasks, tasksKey]);
 
   // Add Farm Handler
   const handleAddFarm = (e) => {
@@ -170,21 +125,22 @@ export default function FarmManager({ user, onScanRedirect }) {
     setShowAddFarmModal(false);
     setNewFarm({
       name: '',
-      location: 'Noida, UP',
-      size: '2 Acres',
-      soilType: 'Alluvial (जलोढ़ मिट्टी)',
+      location: '',
+      size: '',
+      soilType: lang === 'hi' ? 'जलोढ़ दोमट मिट्टी' : 'Alluvial Loam',
       crop: 'Tomato (टमाटर)',
       cropVariety: 'Standard Hybrid',
       sowingDate: new Date().toISOString().split('T')[0],
       harvestDate: '',
-      stage: GROWTH_STAGES[1],
-      health: 'Healthy (स्वस्थ)'
+      stage: lang === 'hi' ? '🌿 वानस्पतिक वृद्धि' : '🌿 Vegetative Growth',
+      health: lang === 'hi' ? 'स्वस्थ (Healthy)' : 'Healthy'
     });
   };
 
   // Delete Farm Handler
   const handleDeleteFarm = (farmId) => {
-    if (window.confirm('Are you sure you want to delete this farm plot?')) {
+    const confirmMsg = lang === 'hi' ? 'क्या आप इस खेत के रिकॉर्ड को हटाना चाहते हैं?' : 'Are you sure you want to delete this farm plot?';
+    if (window.confirm(confirmMsg)) {
       const updated = farms.filter(f => f.id !== farmId);
       setFarms(updated);
       setTasks(tasks.filter(t => t.farmId !== farmId));
@@ -203,7 +159,7 @@ export default function FarmManager({ user, onScanRedirect }) {
     const createdTask = {
       ...newTask,
       id: `task-${Date.now()}`,
-      farmName: matchedFarm?.name || 'General Farm',
+      farmName: matchedFarm?.name || (lang === 'hi' ? 'सामान्य खेत' : 'General Farm'),
       completed: false,
       urgent: false
     };
@@ -216,8 +172,7 @@ export default function FarmManager({ user, onScanRedirect }) {
       title: '',
       dosage: '',
       date: new Date().toISOString().split('T')[0],
-      time: '07:00 AM',
-      repeat: 'none'
+      time: '07:00 AM'
     });
   };
 
@@ -246,46 +201,53 @@ export default function FarmManager({ user, onScanRedirect }) {
       <div style={{
         background: '#123924',
         borderRadius: '20px',
-        padding: '1.5rem 1.75rem',
+        padding: '1.75rem',
         color: '#ffffff',
         marginBottom: '1.5rem',
+        boxShadow: '0 8px 25px rgba(18, 57, 36, 0.15)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '1rem',
-        boxShadow: '0 4px 20px rgba(18, 57, 36, 0.15)'
+        gap: '1.25rem'
       }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <span style={{ fontSize: '1.6rem' }}>🌾</span>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>
-              My Farm & Crop Schedules (मेरा खेत और कार्य अनुसूची)
-            </h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#86efac', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase' }}>
+            <Sprout size={18} />
+            <span>{t.tabFarms}</span>
           </div>
-          <p style={{ color: '#bbf7d0', fontSize: '0.9rem', margin: '0.35rem 0 0 0' }}>
-            Schedule crops, irrigation, fertilizer, and spray reminders for your farm plots
+          <h2 style={{ fontSize: '1.9rem', fontWeight: 800, margin: '0.3rem 0 0 0' }}>
+            {t.farmTitle}
+          </h2>
+          <p style={{ color: '#bbf7d0', fontSize: '0.9rem', margin: '0.3rem 0 0 0', opacity: 0.9 }}>
+            {t.farmSubtitle}
           </p>
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <button
             onClick={() => setShowAddFarmModal(true)}
             className="btn-primary"
-            style={{ padding: '0.65rem 1.25rem', fontSize: '0.88rem' }}
+            style={{ padding: '0.7rem 1.3rem', fontSize: '0.88rem' }}
           >
             <Plus size={18} />
-            <span>+ Add Farm (खेत जोड़ें)</span>
+            <span>{t.addNewFarmBtn}</span>
           </button>
 
           <button
-            onClick={() => setShowAddTaskModal(true)}
+            onClick={() => {
+              if (farms.length === 0) {
+                setShowAddFarmModal(true);
+              } else {
+                setShowAddTaskModal(true);
+              }
+            }}
             className="btn-amber"
-            style={{ padding: '0.65rem 1.25rem', fontSize: '0.88rem' }}
+            style={{ padding: '0.7rem 1.3rem', fontSize: '0.88rem' }}
           >
             <Calendar size={18} />
-            <span>+ Schedule Task (कार्य जोड़ें)</span>
+            <span>{t.addNewTaskBtn}</span>
           </button>
         </div>
       </div>
@@ -314,10 +276,10 @@ export default function FarmManager({ user, onScanRedirect }) {
           </div>
           <div>
             <div style={{ fontSize: '0.78rem', color: '#6b7280', fontWeight: 700, textTransform: 'uppercase' }}>
-              Total Plots (कुल खेत)
+              {lang === 'hi' ? 'कुल खेत (Plots)' : 'Total Plots'}
             </div>
             <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#14281d' }}>
-              {farms.length} Plots
+              {farms.length} {lang === 'hi' ? 'खेत' : 'Plots'}
             </div>
           </div>
         </div>
@@ -339,10 +301,10 @@ export default function FarmManager({ user, onScanRedirect }) {
           </div>
           <div>
             <div style={{ fontSize: '0.78rem', color: '#6b7280', fontWeight: 700, textTransform: 'uppercase' }}>
-              Active Crops (बोई गई फसलें)
+              {lang === 'hi' ? 'बोई गई फसलें' : 'Active Crops'}
             </div>
             <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#14281d' }}>
-              {new Set(farms.map(f => f.crop)).size} Varieties
+              {new Set(farms.map(f => f.crop)).size} {lang === 'hi' ? 'फसलें' : 'Crops'}
             </div>
           </div>
         </div>
@@ -364,10 +326,10 @@ export default function FarmManager({ user, onScanRedirect }) {
           </div>
           <div>
             <div style={{ fontSize: '0.78rem', color: '#6b7280', fontWeight: 700, textTransform: 'uppercase' }}>
-              Pending Tasks (बाकी कार्य)
+              {lang === 'hi' ? 'लंबित कार्य' : 'Pending Tasks'}
             </div>
             <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#14281d' }}>
-              {pendingCount} Tasks
+              {pendingCount} {lang === 'hi' ? 'कार्य' : 'Tasks'}
             </div>
           </div>
         </div>
@@ -380,7 +342,7 @@ export default function FarmManager({ user, onScanRedirect }) {
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3 style={{ fontSize: '1.2rem', color: '#14281d', fontWeight: 800, margin: 0 }}>
-              🌾 Registered Farm Plots ({farms.length})
+              🌾 {t.tabFarms} ({farms.length})
             </h3>
             <button
               onClick={() => setShowAddFarmModal(true)}
@@ -396,115 +358,149 @@ export default function FarmManager({ user, onScanRedirect }) {
                 gap: '0.25rem'
               }}
             >
-              <Plus size={16} /> Add New Plot
+              <Plus size={16} /> {t.addNewFarmBtn}
             </button>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {farms.map((farm) => (
-              <div 
-                key={farm.id}
-                className="glass-panel"
-                style={{
-                  padding: '1.25rem',
-                  border: selectedFarmId === farm.id ? '2px solid #16a34a' : '1px solid #e5eae1',
-                  background: '#ffffff',
-                  boxShadow: selectedFarmId === farm.id ? '0 4px 16px rgba(22, 163, 74, 0.15)' : '0 2px 8px rgba(18, 57, 36, 0.04)',
-                  transition: 'all 0.25s ease'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                  <div>
-                    <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#14281d', margin: 0 }}>
-                      {farm.name}
-                    </h4>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#6b7280', fontSize: '0.82rem', marginTop: '0.2rem' }}>
-                      <MapPin size={14} color="#15803d" />
-                      <span>{farm.location} · {farm.size}</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => handleDeleteFarm(farm.id)}
-                    title="Delete Farm"
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#9ca3af',
-                      cursor: 'pointer',
-                      padding: '0.25rem'
-                    }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-
-                {/* Crop & Growth Stage Card */}
+            {farms.length === 0 ? (
+              /* Clean Empty State for Farms (Fix 2) */
+              <div className="glass-panel" style={{ padding: '3.5rem 2rem', textAlign: 'center', background: '#ffffff', borderRadius: '20px' }}>
                 <div style={{
-                  background: '#f8faf6',
-                  border: '1px solid #e2ebd8',
-                  borderRadius: '12px',
-                  padding: '0.85rem',
-                  marginBottom: '0.85rem'
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  background: '#f0fdf4',
+                  border: '1.5px solid #bbf7d0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.25rem',
+                  color: '#15803d'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '1.25rem' }}>
-                        {CROPS_LIST.find(c => farm.crop.includes(c.name.split(' ')[0]))?.icon || '🌱'}
-                      </span>
-                      <div>
-                        <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#14281d' }}>
-                          {farm.crop} ({farm.cropVariety})
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                          Sown on {farm.sowingDate}
-                        </div>
+                  <Sprout size={32} />
+                </div>
+                <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#14281d', margin: '0 0 0.4rem 0' }}>
+                  {t.emptyFarmsTitle}
+                </h4>
+                <p style={{ color: '#6b7280', fontSize: '0.88rem', maxWidth: '360px', margin: '0 auto 1.5rem', lineHeight: 1.5 }}>
+                  {t.emptyFarmsSub}
+                </p>
+                <button
+                  onClick={() => setShowAddFarmModal(true)}
+                  className="btn-primary"
+                  style={{ padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                >
+                  <Plus size={18} />
+                  <span>{t.addNewFarmBtn}</span>
+                </button>
+              </div>
+            ) : (
+              farms.map((farm) => (
+                <div 
+                  key={farm.id}
+                  className="glass-panel"
+                  style={{
+                    padding: '1.25rem',
+                    border: selectedFarmId === farm.id ? '2px solid #16a34a' : '1px solid #e5eae1',
+                    background: '#ffffff',
+                    boxShadow: selectedFarmId === farm.id ? '0 4px 16px rgba(22, 163, 74, 0.15)' : '0 2px 8px rgba(18, 57, 36, 0.04)',
+                    transition: 'all 0.25s ease'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                    <div>
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#14281d', margin: 0 }}>
+                        {farm.name}
+                      </h4>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#6b7280', fontSize: '0.82rem', marginTop: '0.2rem' }}>
+                        <MapPin size={14} color="#15803d" />
+                        <span>{farm.location || 'Local Farm'} · {farm.size || '1 Acre'}</span>
                       </div>
                     </div>
 
-                    <span style={{
-                      background: farm.health.includes('Healthy') ? '#ecfdf5' : '#fffbeb',
-                      color: farm.health.includes('Healthy') ? '#059669' : '#d97706',
-                      border: `1px solid ${farm.health.includes('Healthy') ? '#a7f3d0' : '#fde68a'}`,
-                      padding: '0.2rem 0.55rem',
-                      borderRadius: '999px',
-                      fontSize: '0.72rem',
-                      fontWeight: 700
-                    }}>
-                      {farm.health}
+                    <button
+                      onClick={() => handleDeleteFarm(farm.id)}
+                      title={t.deleteBtn}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#9ca3af',
+                        cursor: 'pointer',
+                        padding: '0.25rem'
+                      }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+
+                  {/* Crop & Growth Stage Card */}
+                  <div style={{
+                    background: '#f8faf6',
+                    border: '1px solid #e2ebd8',
+                    borderRadius: '12px',
+                    padding: '0.85rem',
+                    marginBottom: '0.85rem'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontSize: '1.25rem' }}>
+                          {CROPS_LIST.find(c => farm.crop.includes(c.name.split(' ')[0]))?.icon || '🌱'}
+                        </span>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#14281d' }}>
+                            {farm.crop} {farm.cropVariety ? `(${farm.cropVariety})` : ''}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                            {t.sowingDateLabel}: {farm.sowingDate}
+                          </div>
+                        </div>
+                      </div>
+
+                      <span style={{
+                        background: farm.health?.includes('Healthy') || farm.health?.includes('स्वस्थ') ? '#ecfdf5' : '#fffbeb',
+                        color: farm.health?.includes('Healthy') || farm.health?.includes('स्वस्थ') ? '#059669' : '#d97706',
+                        border: `1px solid ${farm.health?.includes('Healthy') || farm.health?.includes('स्वस्थ') ? '#a7f3d0' : '#fde68a'}`,
+                        padding: '0.2rem 0.55rem',
+                        borderRadius: '999px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700
+                      }}>
+                        {farm.health || 'Healthy'}
+                      </span>
+                    </div>
+
+                    <div style={{ marginTop: '0.6rem', fontSize: '0.78rem', color: '#15803d', fontWeight: 600 }}>
+                      {farm.stage}
+                    </div>
+                  </div>
+
+                  {/* Plot Task Action */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem' }}>
+                    <span style={{ color: '#4b5563' }}>
+                      {t.soilTypeLabel}: <strong>{farm.soilType}</strong>
                     </span>
-                  </div>
-
-                  <div style={{ marginTop: '0.6rem', fontSize: '0.78rem', color: '#15803d', fontWeight: 600 }}>
-                    {farm.stage}
+                    <button
+                      onClick={() => {
+                        setNewTask({ ...newTask, farmId: farm.id });
+                        setShowAddTaskModal(true);
+                      }}
+                      style={{
+                        background: '#ecfdf5',
+                        border: '1px solid #a7f3d0',
+                        color: '#15803d',
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      + {t.addNewTaskBtn}
+                    </button>
                   </div>
                 </div>
-
-                {/* Plot Task Action */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem' }}>
-                  <span style={{ color: '#4b5563' }}>
-                    Soil: <strong>{farm.soilType}</strong>
-                  </span>
-                  <button
-                    onClick={() => {
-                      setNewTask({ ...newTask, farmId: farm.id });
-                      setShowAddTaskModal(true);
-                    }}
-                    style={{
-                      background: '#ecfdf5',
-                      border: '1px solid #a7f3d0',
-                      color: '#15803d',
-                      padding: '0.35rem 0.75rem',
-                      borderRadius: '8px',
-                      fontWeight: 700,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    + Add Task
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -512,28 +508,31 @@ export default function FarmManager({ user, onScanRedirect }) {
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
             <h3 style={{ fontSize: '1.2rem', color: '#14281d', fontWeight: 800, margin: 0 }}>
-              📅 Farm Tasks & Reminders ({tasks.length})
+              📅 {t.tabTasks} ({tasks.length})
             </h3>
 
             {/* Filter Tabs */}
             <div style={{ display: 'flex', background: '#e9eee5', borderRadius: '10px', padding: '3px' }}>
-              {['all', 'pending', 'completed'].map((f) => (
+              {[
+                { id: 'all', label: lang === 'hi' ? 'सभी' : 'All' },
+                { id: 'pending', label: lang === 'hi' ? 'लंबित' : 'Pending' },
+                { id: 'completed', label: lang === 'hi' ? 'पूर्ण' : 'Done' }
+              ].map((fObj) => (
                 <button
-                  key={f}
-                  onClick={() => setTaskFilter(f)}
+                  key={fObj.id}
+                  onClick={() => setTaskFilter(fObj.id)}
                   style={{
-                    background: taskFilter === f ? '#123924' : 'transparent',
-                    color: taskFilter === f ? '#ffffff' : '#4b5563',
+                    background: taskFilter === fObj.id ? '#123924' : 'transparent',
+                    color: taskFilter === fObj.id ? '#ffffff' : '#4b5563',
                     border: 'none',
                     padding: '0.35rem 0.75rem',
                     borderRadius: '8px',
                     fontSize: '0.78rem',
                     fontWeight: 700,
-                    cursor: 'pointer',
-                    textTransform: 'capitalize'
+                    cursor: 'pointer'
                   }}
                 >
-                  {f === 'all' ? 'All' : f === 'pending' ? 'Pending' : 'Done'}
+                  {fObj.label}
                 </button>
               ))}
             </div>
@@ -542,18 +541,26 @@ export default function FarmManager({ user, onScanRedirect }) {
           {/* Tasks List */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
             {filteredTasks.length === 0 ? (
-              <div className="glass-panel" style={{ padding: '3rem 1.5rem', textAlign: 'center' }}>
+              /* Clean Empty State for Tasks (Fix 2) */
+              <div className="glass-panel" style={{ padding: '3.5rem 1.5rem', textAlign: 'center' }}>
                 <Calendar size={38} color="#9ca3af" style={{ margin: '0 auto 0.75rem auto' }} />
-                <h4 style={{ color: '#14281d', fontWeight: 800, margin: 0 }}>No Tasks in this Filter</h4>
-                <p style={{ color: '#6b7280', fontSize: '0.85rem', marginTop: '0.3rem' }}>
-                  Click below to schedule irrigation, fertilizing, or spraying reminders.
+                <h4 style={{ color: '#14281d', fontWeight: 800, margin: 0 }}>{t.emptyTasksTitle}</h4>
+                <p style={{ color: '#6b7280', fontSize: '0.85rem', marginTop: '0.3rem', maxWidth: '340px', margin: '0.3rem auto 1rem auto' }}>
+                  {t.emptyTasksSub}
                 </p>
                 <button
-                  onClick={() => setShowAddTaskModal(true)}
+                  onClick={() => {
+                    if (farms.length === 0) {
+                      setShowAddFarmModal(true);
+                    } else {
+                      setShowAddTaskModal(true);
+                    }
+                  }}
                   className="btn-amber"
-                  style={{ marginTop: '1rem', fontSize: '0.85rem', padding: '0.65rem 1.25rem' }}
+                  style={{ fontSize: '0.85rem', padding: '0.65rem 1.25rem' }}
                 >
-                  + Add New Reminder
+                  <Plus size={16} />
+                  <span>{t.addNewTaskBtn}</span>
                 </button>
               </div>
             ) : (
@@ -599,69 +606,60 @@ export default function FarmManager({ user, onScanRedirect }) {
 
                       {/* Content */}
                       <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div>
-                            <span style={{
-                              background: catObj.bg,
-                              color: catObj.color,
-                              padding: '0.15rem 0.5rem',
-                              borderRadius: '6px',
-                              fontSize: '0.72rem',
-                              fontWeight: 700,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.3rem',
-                              marginBottom: '0.3rem'
-                            }}>
-                              <CatIcon size={12} />
-                              {catObj.label.split('/')[0]}
-                            </span>
-
-                            <h4 style={{
-                              fontSize: '0.98rem',
-                              fontWeight: 800,
-                              color: task.completed ? '#6b7280' : '#14281d',
-                              textDecoration: task.completed ? 'line-through' : 'none',
-                              margin: 0
-                            }}>
-                              {task.title}
-                            </h4>
-                          </div>
-
-                          <button
-                            onClick={() => handleDeleteTask(task.id)}
-                            title="Delete Task"
-                            style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer' }}
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-
-                        {task.dosage && (
-                          <p style={{ color: '#4b5563', fontSize: '0.82rem', margin: '0.35rem 0 0.5rem 0', lineHeight: '1.4' }}>
-                            📝 {task.dosage}
-                          </p>
-                        )}
-
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.4rem', fontSize: '0.78rem' }}>
-                          <span style={{ color: '#15803d', fontWeight: 600 }}>
-                            📍 {task.farmName}
-                          </span>
-
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
                           <span style={{
-                            color: '#b45309',
-                            background: '#fffbeb',
-                            padding: '0.15rem 0.55rem',
+                            background: catObj.bg,
+                            color: catObj.color,
+                            padding: '0.15rem 0.5rem',
                             borderRadius: '999px',
-                            fontWeight: 700,
+                            fontSize: '0.72rem',
+                            fontWeight: 800,
                             display: 'flex',
                             alignItems: 'center',
                             gap: '0.3rem'
                           }}>
-                            <Clock size={12} /> {task.date} · {task.time}
+                            <CatIcon size={12} />
+                            {lang === 'hi' ? catObj.labelHi : catObj.labelEn}
+                          </span>
+                          <span style={{ fontSize: '0.78rem', color: '#6b7280', fontWeight: 600 }}>
+                            {task.farmName}
+                          </span>
+                        </div>
+
+                        <div style={{
+                          fontWeight: 800,
+                          fontSize: '0.92rem',
+                          color: task.completed ? '#6b7280' : '#14281d',
+                          textDecoration: task.completed ? 'line-through' : 'none'
+                        }}>
+                          {task.title}
+                        </div>
+
+                        {task.dosage && (
+                          <div style={{ fontSize: '0.8rem', color: '#4b5563', marginTop: '0.2rem' }}>
+                            🥣 {task.dosage}
+                          </div>
+                        )}
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.45rem', fontSize: '0.78rem', color: '#6b7280' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <Calendar size={13} color="#15803d" />
+                            {task.date}
+                          </span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <Clock size={13} color="#d97706" />
+                            {task.time}
                           </span>
                         </div>
                       </div>
+
+                      {/* Delete */}
+                      <button
+                        onClick={() => handleDeleteTask(task.id)}
+                        style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '0.2rem' }}
+                      >
+                        <Trash2 size={15} />
+                      </button>
 
                     </div>
                   </div>
@@ -673,13 +671,13 @@ export default function FarmManager({ user, onScanRedirect }) {
 
       </div>
 
-      {/* Add Farm Modal */}
+      {/* ADD FARM MODAL */}
       {showAddFarmModal && (
         <div style={{
           position: 'fixed',
           inset: 0,
           background: 'rgba(10, 20, 16, 0.65)',
-          backdropFilter: 'blur(6px)',
+          backdropFilter: 'blur(5px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -689,15 +687,16 @@ export default function FarmManager({ user, onScanRedirect }) {
           <div className="glass-panel" style={{
             maxWidth: '520px',
             width: '100%',
-            padding: '2rem',
             background: '#ffffff',
-            borderRadius: '20px',
-            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
+            borderRadius: '24px',
+            padding: '2rem',
+            border: '1px solid #e5eae1',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.2)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#14281d', fontWeight: 800, fontSize: '1.25rem' }}>
-                <Sprout size={24} color="#15803d" />
-                <span>Add Farm Plot (नया खेत जोड़ें)</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#15803d', fontWeight: 800 }}>
+                <Sprout size={22} />
+                <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#14281d' }}>{t.addNewFarmBtn}</h3>
               </div>
               <button onClick={() => setShowAddFarmModal(false)} style={{ background: 'transparent', border: 'none', color: '#6b7280', cursor: 'pointer' }}>
                 <X size={20} />
@@ -706,27 +705,27 @@ export default function FarmManager({ user, onScanRedirect }) {
 
             <form onSubmit={handleAddFarm} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#374151', marginBottom: '0.3rem' }}>
-                  Farm / Plot Name (खेत का नाम):
+                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#374151', display: 'block', marginBottom: '0.35rem' }}>
+                  {t.farmNameLabel} *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. North Plot #3 (उत्तर वाला खेत)"
+                  placeholder={lang === 'hi' ? 'उदा. उत्तरी खेत / ट्यूबवेल प्लॉट' : 'e.g. North Plot / Well Acre'}
                   value={newFarm.name}
                   onChange={(e) => setNewFarm({ ...newFarm, name: e.target.value })}
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.9rem', color: '#14281d' }}
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#374151', marginBottom: '0.3rem' }}>
-                    Plot Size (क्षेत्रफल):
+                  <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#374151', display: 'block', marginBottom: '0.35rem' }}>
+                    {t.farmSizeLabel}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. 2.5 Acres / 5 बीघा"
+                    placeholder="2.5 Acres"
                     value={newFarm.size}
                     onChange={(e) => setNewFarm({ ...newFarm, size: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
@@ -734,11 +733,12 @@ export default function FarmManager({ user, onScanRedirect }) {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#374151', marginBottom: '0.3rem' }}>
-                    Location (स्थान):
+                  <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#374151', display: 'block', marginBottom: '0.35rem' }}>
+                    {t.farmLocationLabel}
                   </label>
                   <input
                     type="text"
+                    placeholder={lang === 'hi' ? 'गांव / क्षेत्र' : 'Village / Sector'}
                     value={newFarm.location}
                     onChange={(e) => setNewFarm({ ...newFarm, location: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
@@ -746,15 +746,15 @@ export default function FarmManager({ user, onScanRedirect }) {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#374151', marginBottom: '0.3rem' }}>
-                    Crop Sown (बोई जाने वाली फसल):
+                  <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#374151', display: 'block', marginBottom: '0.35rem' }}>
+                    {t.farmCropLabel}
                   </label>
                   <select
                     value={newFarm.crop}
                     onChange={(e) => setNewFarm({ ...newFarm, crop: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.9rem', background: '#fff' }}
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.9rem', background: '#ffffff' }}
                   >
                     {CROPS_LIST.map(c => (
                       <option key={c.id} value={c.name}>{c.name}</option>
@@ -763,22 +763,8 @@ export default function FarmManager({ user, onScanRedirect }) {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#374151', marginBottom: '0.3rem' }}>
-                    Variety (किस्म):
-                  </label>
-                  <input
-                    type="text"
-                    value={newFarm.cropVariety}
-                    onChange={(e) => setNewFarm({ ...newFarm, cropVariety: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#374151', marginBottom: '0.3rem' }}>
-                    Sowing Date (बुवाई तिथि):
+                  <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#374151', display: 'block', marginBottom: '0.35rem' }}>
+                    {t.sowingDateLabel}
                   </label>
                   <input
                     type="date"
@@ -787,38 +773,22 @@ export default function FarmManager({ user, onScanRedirect }) {
                     style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
                   />
                 </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#374151', marginBottom: '0.3rem' }}>
-                    Current Growth Stage (अवस्था):
-                  </label>
-                  <select
-                    value={newFarm.stage}
-                    onChange={(e) => setNewFarm({ ...newFarm, stage: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.9rem', background: '#fff' }}
-                  >
-                    {GROWTH_STAGES.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  style={{ flex: 1, padding: '0.85rem' }}
-                >
-                  Save Farm Plot (खेत सहेजें)
-                </button>
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
                 <button
                   type="button"
                   onClick={() => setShowAddFarmModal(false)}
-                  className="btn-secondary"
-                  style={{ padding: '0.85rem' }}
+                  style={{ flex: 1, padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#4b5563', fontWeight: 700, cursor: 'pointer' }}
                 >
-                  Cancel
+                  {t.cancelBtn}
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  style={{ flex: 1, padding: '0.75rem' }}
+                >
+                  {t.saveBtn}
                 </button>
               </div>
             </form>
@@ -826,13 +796,13 @@ export default function FarmManager({ user, onScanRedirect }) {
         </div>
       )}
 
-      {/* Add Task / Reminder Modal */}
+      {/* ADD TASK MODAL */}
       {showAddTaskModal && (
         <div style={{
           position: 'fixed',
           inset: 0,
           background: 'rgba(10, 20, 16, 0.65)',
-          backdropFilter: 'blur(6px)',
+          backdropFilter: 'blur(5px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -842,15 +812,16 @@ export default function FarmManager({ user, onScanRedirect }) {
           <div className="glass-panel" style={{
             maxWidth: '520px',
             width: '100%',
-            padding: '2rem',
             background: '#ffffff',
-            borderRadius: '20px',
-            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
+            borderRadius: '24px',
+            padding: '2rem',
+            border: '1px solid #e5eae1',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.2)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#14281d', fontWeight: 800, fontSize: '1.25rem' }}>
-                <Calendar size={24} color="#d97706" />
-                <span>Schedule Crop Task / Reminder (कार्य शेड्यूल करें)</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#15803d', fontWeight: 800 }}>
+                <Calendar size={22} />
+                <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#14281d' }}>{t.addNewTaskBtn}</h3>
               </div>
               <button onClick={() => setShowAddTaskModal(false)} style={{ background: 'transparent', border: 'none', color: '#6b7280', cursor: 'pointer' }}>
                 <X size={20} />
@@ -859,64 +830,59 @@ export default function FarmManager({ user, onScanRedirect }) {
 
             <form onSubmit={handleAddTask} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#374151', marginBottom: '0.3rem' }}>
-                  Select Farm Plot (खेत चुनें):
+                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#374151', display: 'block', marginBottom: '0.35rem' }}>
+                  {lang === 'hi' ? 'खेत का चयन करें' : 'Select Farm Plot'} *
                 </label>
                 <select
                   value={newTask.farmId}
                   onChange={(e) => setNewTask({ ...newTask, farmId: e.target.value })}
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.9rem', background: '#fff' }}
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.9rem', background: '#ffffff' }}
                 >
-                  {farms.map(f => (
-                    <option key={f.id} value={f.id}>{f.name} - ({f.crop})</option>
-                  ))}
+                  {farms.length > 0 ? (
+                    farms.map(f => (
+                      <option key={f.id} value={f.id}>{f.name} ({f.crop})</option>
+                    ))
+                  ) : (
+                    <option value="">{lang === 'hi' ? 'सामान्य खेत' : 'General Farm'}</option>
+                  )}
                 </select>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#374151', marginBottom: '0.3rem' }}>
-                  Task Category (कार्य का प्रकार):
+                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#374151', display: 'block', marginBottom: '0.35rem' }}>
+                  {lang === 'hi' ? 'कार्य श्रेणी' : 'Task Category'}
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem' }}>
-                  {TASK_CATEGORIES.map(cat => {
-                    const Icon = cat.icon;
-                    const isSelected = newTask.category === cat.id;
-                    return (
-                      <button
-                        type="button"
-                        key={cat.id}
-                        onClick={() => setNewTask({ ...newTask, category: cat.id })}
-                        style={{
-                          padding: '0.55rem',
-                          borderRadius: '10px',
-                          border: isSelected ? `2px solid ${cat.color}` : '1px solid #e5eae1',
-                          background: isSelected ? cat.bg : '#ffffff',
-                          color: isSelected ? cat.color : '#4b5563',
-                          fontWeight: 700,
-                          fontSize: '0.76rem',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.4rem',
-                          justifyContent: 'center'
-                        }}
-                      >
-                        <Icon size={14} />
-                        <span>{cat.label.split('/')[0]}</span>
-                      </button>
-                    );
-                  })}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  {TASK_CATEGORIES.map(cat => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setNewTask({ ...newTask, category: cat.id })}
+                      style={{
+                        padding: '0.4rem 0.8rem',
+                        borderRadius: '999px',
+                        border: newTask.category === cat.id ? `2px solid ${cat.color}` : '1px solid #cbd5e1',
+                        background: newTask.category === cat.id ? cat.bg : '#ffffff',
+                        color: newTask.category === cat.id ? cat.color : '#4b5563',
+                        fontSize: '0.8rem',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {lang === 'hi' ? cat.labelHi : cat.labelEn}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#374151', marginBottom: '0.3rem' }}>
-                  Task Description / Title (कार्य का विवरण):
+                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#374151', display: 'block', marginBottom: '0.35rem' }}>
+                  {lang === 'hi' ? 'कार्य का विवरण / नाम' : 'Task Title / Action'} *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Neem Oil Spray 5ml/L, Drip irrigation 2 hrs"
+                  placeholder={lang === 'hi' ? 'उदा. नीम तेल छिड़काव / यूरिया खाद' : 'e.g. Neem Oil Spray / Top Dressing'}
                   value={newTask.title}
                   onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
                   style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
@@ -924,26 +890,25 @@ export default function FarmManager({ user, onScanRedirect }) {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#374151', marginBottom: '0.3rem' }}>
-                  Dosage / Field Action Instructions (मात्रा व निर्देश):
+                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#374151', display: 'block', marginBottom: '0.35rem' }}>
+                  {lang === 'hi' ? 'मात्रा / निर्देश (वैकल्पिक)' : 'Dosage / Instructions'}
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Spray in early morning 7-9 AM, avoid direct sun"
+                  placeholder={lang === 'hi' ? 'उदा. 5ml प्रति लीटर पानी में' : 'e.g. 5ml per 1L water'}
                   value={newTask.dosage}
                   onChange={(e) => setNewTask({ ...newTask, dosage: e.target.value })}
                   style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#374151', marginBottom: '0.3rem' }}>
-                    Scheduled Date (तिथि):
+                  <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#374151', display: 'block', marginBottom: '0.35rem' }}>
+                    {lang === 'hi' ? 'तारीख' : 'Date'}
                   </label>
                   <input
                     type="date"
-                    required
                     value={newTask.date}
                     onChange={(e) => setNewTask({ ...newTask, date: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
@@ -951,33 +916,33 @@ export default function FarmManager({ user, onScanRedirect }) {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#374151', marginBottom: '0.3rem' }}>
-                    Time (समय):
+                  <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#374151', display: 'block', marginBottom: '0.35rem' }}>
+                    {lang === 'hi' ? 'समय' : 'Time'}
                   </label>
                   <input
                     type="text"
                     value={newTask.time}
+                    placeholder="07:00 AM"
                     onChange={(e) => setNewTask({ ...newTask, time: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-                <button
-                  type="submit"
-                  className="btn-amber"
-                  style={{ flex: 1, padding: '0.85rem' }}
-                >
-                  Set Task Reminder (रिमाइंडर सेट करें)
-                </button>
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
                 <button
                   type="button"
                   onClick={() => setShowAddTaskModal(false)}
-                  className="btn-secondary"
-                  style={{ padding: '0.85rem' }}
+                  style={{ flex: 1, padding: '0.75rem', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#4b5563', fontWeight: 700, cursor: 'pointer' }}
                 >
-                  Cancel
+                  {t.cancelBtn}
+                </button>
+                <button
+                  type="submit"
+                  className="btn-amber"
+                  style={{ flex: 1, padding: '0.75rem' }}
+                >
+                  {t.saveBtn}
                 </button>
               </div>
             </form>

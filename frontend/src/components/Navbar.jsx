@@ -1,7 +1,10 @@
 import React from 'react';
-import { Sprout, ShieldAlert, CloudSun, UserCheck, LogIn, LogOut, Sparkles } from 'lucide-react';
+import { Sprout, ShieldAlert, CloudSun, UserCheck, LogIn, LogOut, Globe } from 'lucide-react';
+import { TRANSLATIONS } from '../translations';
 
-export default function Navbar({ activePage, setActivePage, user, onOpenAuth, onLogout }) {
+export default function Navbar({ activePage, setActivePage, user, onOpenAuth, onLogout, lang, setLang }) {
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.hi;
+
   return (
     <header style={{
       position: 'sticky',
@@ -52,17 +55,17 @@ export default function Navbar({ activePage, setActivePage, user, onOpenAuth, on
                 fontWeight: 700,
                 border: '1px solid rgba(255, 255, 255, 0.25)',
               }}>
-                कृषि बंधु v2.5
+                {t.navVersion}
               </span>
             </div>
             <p style={{ fontSize: '0.74rem', color: '#bbf7d0', margin: 0, opacity: 0.9 }}>
-              AI Plant Health & Smart Farmer Advisory
+              {t.navSubtitle}
             </p>
           </div>
         </div>
 
         {/* Navigation Links */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
           <button
             onClick={() => setActivePage('detector')}
             style={{
@@ -81,7 +84,7 @@ export default function Navbar({ activePage, setActivePage, user, onOpenAuth, on
             }}
           >
             <ShieldAlert size={17} />
-            <span>Disease Detector</span>
+            <span>{t.navDetector}</span>
           </button>
 
           <button
@@ -102,7 +105,7 @@ export default function Navbar({ activePage, setActivePage, user, onOpenAuth, on
             }}
           >
             <CloudSun size={17} />
-            <span>Weather & Crops</span>
+            <span>{t.navWeather}</span>
           </button>
 
           <button
@@ -123,7 +126,7 @@ export default function Navbar({ activePage, setActivePage, user, onOpenAuth, on
             }}
           >
             <Sprout size={17} />
-            <span>My Farm & Schedule</span>
+            <span>{t.navFarm}</span>
           </button>
 
           <button
@@ -144,12 +147,38 @@ export default function Navbar({ activePage, setActivePage, user, onOpenAuth, on
             }}
           >
             <UserCheck size={17} />
-            <span>User Portal</span>
+            <span>{t.navUser}</span>
           </button>
         </nav>
 
-        {/* User Auth Action Button */}
+        {/* Global Controls: Language Switcher & User Auth Action Button */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          
+          {/* Global Language Switcher Button (Available on Every Page) */}
+          <button
+            onClick={() => setLang(lang === 'hi' ? 'en' : 'hi')}
+            title="भाषा बदलें / Change Language"
+            style={{
+              background: 'rgba(255, 255, 255, 0.12)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              color: '#ffffff',
+              padding: '0.45rem 0.9rem',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+            }}
+          >
+            <Globe size={16} color="#86efac" />
+            <span style={{ color: '#86efac', fontWeight: 900 }}>{lang === 'hi' ? 'अ' : 'A'}</span>
+            <span style={{ opacity: 0.9 }}>/ {lang === 'hi' ? 'English' : 'हिंदी'}</span>
+          </button>
+
           {user ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <div style={{
@@ -169,7 +198,7 @@ export default function Navbar({ activePage, setActivePage, user, onOpenAuth, on
 
               <button
                 onClick={onLogout}
-                title="Logout"
+                title={t.navLogout}
                 style={{
                   background: 'rgba(239, 68, 68, 0.2)',
                   border: '1px solid rgba(239, 68, 68, 0.4)',
@@ -193,7 +222,7 @@ export default function Navbar({ activePage, setActivePage, user, onOpenAuth, on
               style={{ fontSize: '0.86rem', padding: '0.55rem 1.2rem', borderRadius: '12px' }}
             >
               <LogIn size={16} />
-              <span>Login / Sign Up</span>
+              <span>{t.navLogin}</span>
             </button>
           )}
         </div>
@@ -201,3 +230,4 @@ export default function Navbar({ activePage, setActivePage, user, onOpenAuth, on
     </header>
   );
 }
+
