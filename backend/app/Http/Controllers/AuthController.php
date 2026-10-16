@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
@@ -255,6 +256,83 @@ class AuthController extends Controller
                 'success' => false,
                 'message' => 'Google Authentication Error: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    public function handleGoogleCallback(Request $request)
+    {
+        $code = $request->query('code');
+        $error = $request->query('error');
+        $frontendOrigin = env('FRONTEND_URL', 'http://localhost:3000');
+
+        if ($error) {
+            return redirect($frontendOrigin . '/?error=' . urlencode($error));
+        }
+
+        if (!$code) {
+            return redirect($frontendOrigin . '/?error=' . urlencode('No authorization code received from Google.'));
+        }
+
+        try {
+            $clientId = env('GOOGLE_CLIENT_ID');
+            $clientSecret = env('GOOGLE_CLIENT_SECRET');
+            $redirectUri = env('GOOGLE_REDIRECT_URI', 'http://localhost:3000/api/auth/google/callback');
+
+            // Exchange authorization code with Google for tokens (bypass Windows missing local CA cert check)
+            $response = Http::withoutVerifying()->asForm()->post('https://oauth2.googleapis.com/token', [
+                'code' => $code,
+                'client_id' => $clientId,
+                'client_secret' => $clientSecret,
+                'redirect_uri' => $redirectUri,
+                'grant_type' => 'authorization_code',
+            ]);
+
+            if (!$response->successful()) {
+                return redirect($frontendOrigin . '/?error=' . urlencode('Google Token Exchange Failed: ' . $response->body()));
+            }
+
+            $tokenData = $response->json();
+            $accessToken = $tokenData['access_token'] ?? null;
+
+            if (!$accessToken) {
+                return redirect($frontendOrigin . '/?error=' . urlencode('Missing Google Access Token.'));
+            }
+
+            // Fetch user profile from Google
+            $userResponse = Http::withoutVerifying()->withHeaders([
+                'Authorization' => 'Bearer ' . $accessToken,
+            ])->get('https://www.googleapis.com/oauth2/v2/userinfo');
+
+            if (!$userResponse->successful()) {
+                return redirect($frontendOrigin . '/?error=' . urlencode('Failed to fetch user profile from Google.'));
+            }
+
+            $profile = $userResponse->json();
+            $email = strtolower(trim($profile['email']));
+            $name = $profile['name'] ?? explode('@', $email)[0];
+
+            $user = User::firstOrCreate(
+                ['email' => $email],
+                [
+                    'name' => $name,
+                    'password' => Hash::make(bin2hex(random_bytes(16))),
+                    'role' => 'Farmer',
+                    'email_verified_at' => now(),
+                ]
+            );
+
+            $token = bin2hex(random_bytes(32));
+
+            $userData = base64_encode(json_encode([
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role ?? 'Farmer',
+            ]));
+
+            return redirect($frontendOrigin . '/?google_auth=success&token=' . $token . '&user=' . urlencode($userData));
+        } catch (\Exception $e) {
+            return redirect($frontendOrigin . '/?error=' . urlencode('OAuth Error: ' . $e->getMessage()));
         }
     }
 

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Mail, Lock, User as UserIcon, ShieldCheck, LogIn, UserPlus, 
-  LogOut, CheckCircle2, AlertCircle, ArrowRight, Sparkles 
+  LogOut, CheckCircle2, AlertCircle, ArrowRight, Sparkles, Key 
 } from 'lucide-react';
 import { authService } from '../services/api';
 import { TRANSLATIONS } from '../translations';
@@ -13,9 +13,80 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
-  const [showGooglePrompt, setShowGooglePrompt] = useState(false);
-  const [googleEmail, setGoogleEmail] = useState('');
-  const [googleName, setGoogleName] = useState('');
+  const googleBtnContainerRef = useRef(null);
+  const googleClientId = import.meta.env?.VITE_GOOGLE_CLIENT_ID || '';
+
+  const executeGoogleLogin = async (email, name) => {
+    if (!email) return;
+    setLoading(true);
+
+    try {
+      const res = await authService.googleLogin({
+        email: email.trim(),
+        name: (name || email.split('@')[0]).trim(),
+        role: formData.role || 'Farmer'
+      });
+
+      if (res && res.user) {
+        setUser(res.user);
+        setMessage(lang === 'hi' ? 'Google खाता सफलतापूर्वक लिंक हो गया!' : 'Google account connected successfully!');
+        if (onScanRedirect) {
+          setTimeout(() => onScanRedirect(), 800);
+        }
+      } else {
+        setError(res.message || 'Google Sign-In failed.');
+      }
+    } catch (err) {
+      setError(err.message || 'Google Sign-In error occurred.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const initGis = () => {
+      if (!window.google?.accounts?.id || !googleBtnContainerRef.current) return;
+
+      try {
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: (response) => {
+            try {
+              const base64Url = response.credential.split('.')[1];
+              const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+              const jsonPayload = decodeURIComponent(
+                atob(base64)
+                  .split('')
+                  .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                  .join('')
+              );
+              const profile = JSON.parse(jsonPayload);
+              executeGoogleLogin(profile.email, profile.name);
+            } catch (e) {
+              setError(lang === 'hi' ? 'Google प्रमाणीकरण विफल रहा।' : 'Failed to decode Google token.');
+            }
+          },
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+
+        googleBtnContainerRef.current.innerHTML = '';
+        window.google.accounts.id.renderButton(googleBtnContainerRef.current, {
+          theme: 'outline',
+          size: 'large',
+          text: 'continue_with',
+          shape: 'rectangular',
+          width: 320,
+        });
+      } catch (err) {
+        console.warn('GIS error:', err);
+      }
+    };
+
+    initGis();
+    const timer = setTimeout(initGis, 800);
+    return () => clearTimeout(timer);
+  }, [isLogin]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -32,44 +103,29 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  // Google Login Handler (Fix 6)
+  // Official Google OAuth 2.0 Direct Sign-In
+  const redirectToGoogleOAuth = () => {
+    setLoading(true);
+    let redirectUri = window.location.origin + '/api/auth/google/callback';
+    if (redirectUri.includes('localhost') && !redirectUri.includes(':3000')) {
+      redirectUri = 'http://localhost:3000/api/auth/google/callback';
+    }
+    const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({
+      client_id: googleClientId,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: 'openid email profile',
+      access_type: 'offline',
+      prompt: 'select_account'
+    }).toString();
+
+    window.location.href = googleAuthUrl;
+  };
+
   const handleGoogleSignInClick = () => {
     setMessage(null);
     setError(null);
-    setShowGooglePrompt(true);
-  };
-
-  const executeGoogleLogin = async (email, name) => {
-    const cleanEmail = (email || googleEmail).trim();
-    if (!cleanEmail || !isValidEmail(cleanEmail)) {
-      setError(lang === 'hi' ? 'कृपया एक मान्य Google ईमेल दर्ज करें।' : 'Please enter a valid Google email.');
-      return;
-    }
-
-    setLoading(true);
-    setShowGooglePrompt(false);
-
-    try {
-      const res = await authService.googleLogin({
-        email: cleanEmail,
-        name: (name || googleName || cleanEmail.split('@')[0]).trim(),
-        role: formData.role || 'Farmer'
-      });
-
-      if (res && res.user) {
-        setUser(res.user);
-        setMessage(lang === 'hi' ? 'Google खाता सफलतापूर्वक लिंक हो गया!' : 'Google account connected successfully!');
-        if (onScanRedirect) {
-          setTimeout(() => onScanRedirect(), 1200);
-        }
-      } else {
-        setError(res.message || 'Google Sign-In failed.');
-      }
-    } catch (err) {
-      setError(err.message || 'Google Sign-In error occurred.');
-    } finally {
-      setLoading(false);
-    }
+    redirectToGoogleOAuth();
   };
 
   // Direct 1-Step Registration
@@ -337,7 +393,7 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
           </div>
         )}
 
-        {/* Fix 6: Official Google Login Button */}
+        {/* Fix 6: Single Official Google Login Button (Method 2 Web/APK) */}
         <button
           onClick={handleGoogleSignInClick}
           type="button"
@@ -358,7 +414,8 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
             gap: '0.75rem',
             boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
             marginBottom: '1.25rem',
-            transition: 'all 0.2s ease'
+            transition: 'all 0.2s ease',
+            opacity: loading ? 0.7 : 1
           }}
         >
           {/* Official Google SVG Logo */}
@@ -368,7 +425,7 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
             <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
             <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
           </svg>
-          <span>{t.googleSignIn}</span>
+          <span>{loading ? 'Connecting Google...' : t.googleSignIn}</span>
         </button>
 
         {/* Divider */}
@@ -595,151 +652,6 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
         )}
 
       </div>
-
-      {/* Google Account Modal for Web & APK */}
-      {showGooglePrompt && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(10, 20, 16, 0.65)',
-          backdropFilter: 'blur(6px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '1rem'
-        }}>
-          <div className="glass-panel" style={{
-            maxWidth: '440px',
-            width: '100%',
-            padding: '2rem',
-            background: '#ffffff',
-            border: '1px solid #e5eae1',
-            borderRadius: '20px',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
-          }}>
-            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-              <div style={{
-                width: '54px',
-                height: '54px',
-                borderRadius: '50%',
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 1rem'
-              }}>
-                <svg width="26" height="26" viewBox="0 0 48 48">
-                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-                </svg>
-              </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#14281d', margin: '0 0 0.3rem 0' }}>
-                {lang === 'hi' ? 'Google खाते से साइन इन करें' : 'Sign in with Google'}
-              </h3>
-              <p style={{ color: '#6b7280', fontSize: '0.85rem', margin: 0 }}>
-                {lang === 'hi' ? 'कृषि बंधु पर अपना Google ईमेल चुनें या दर्ज करें:' : 'Choose or confirm your Google account for Agri Bandhu:'}
-              </p>
-            </div>
-
-            {/* Quick 1-Tap Google Accounts */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1.25rem' }}>
-              {[
-                { name: 'Kisan Ramesh Kumar', email: 'ramesh.kisan@gmail.com' },
-                { name: 'Farmer Surendra Singh', email: 'surendra.farmer@gmail.com' },
-              ].map((acc, i) => (
-                <button
-                  key={i}
-                  onClick={() => executeGoogleLogin(acc.email, acc.name)}
-                  style={{
-                    background: '#f8faf6',
-                    border: '1px solid #d1d5db',
-                    padding: '0.75rem 1rem',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    cursor: 'pointer',
-                    textAlign: 'left'
-                  }}
-                >
-                  <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#15803d', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.85rem' }}>
-                    {acc.name[0]}
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#14281d' }}>{acc.name}</div>
-                    <div style={{ fontSize: '0.78rem', color: '#6b7280' }}>{acc.email}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {/* Custom Google Account Entry */}
-            <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '1rem', marginBottom: '1rem' }}>
-              <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#374151', marginBottom: '0.4rem' }}>
-                {lang === 'hi' ? 'या अपना व्यक्तिगत Google ईमेल दर्ज करें:' : 'Or enter your Google email:'}
-              </div>
-              <input
-                type="email"
-                placeholder="your.name@gmail.com"
-                value={googleEmail}
-                onChange={(e) => setGoogleEmail(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  border: '1.5px solid #d1d5db',
-                  borderRadius: '10px',
-                  fontSize: '0.9rem',
-                  marginBottom: '0.6rem',
-                  outline: 'none'
-                }}
-              />
-              <input
-                type="text"
-                placeholder={lang === 'hi' ? 'आपका नाम (वैकल्पिक)' : 'Your Name (optional)'}
-                value={googleName}
-                onChange={(e) => setGoogleName(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  border: '1.5px solid #d1d5db',
-                  borderRadius: '10px',
-                  fontSize: '0.9rem',
-                  outline: 'none'
-                }}
-              />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
-              <button
-                onClick={() => setShowGooglePrompt(false)}
-                style={{
-                  background: '#f3f4f6',
-                  border: 'none',
-                  padding: '0.75rem',
-                  borderRadius: '10px',
-                  fontWeight: 700,
-                  fontSize: '0.88rem',
-                  color: '#4b5563',
-                  cursor: 'pointer'
-                }}
-              >
-                {t.cancelBtn}
-              </button>
-              <button
-                onClick={() => executeGoogleLogin()}
-                className="btn-primary"
-                style={{ padding: '0.75rem', fontSize: '0.88rem' }}
-              >
-                {t.googleSignIn}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );

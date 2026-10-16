@@ -143,6 +143,7 @@ const SAMPLE_LEAF_PRESETS = [
     organicRemedy: 'Neem Oil Emulsion: Mix 5ml Neem Oil per 1L water + 2 drops mild soap. Spray thoroughly in early morning.',
     chemicalRemedy: 'Mancozeb 75% WP @ 2g/L or Chlorothalonil 75% WP @ 2g/L of clean water.',
     prevention: 'Maintain plant spacing for airflow, practice 3-year crop rotation, and avoid overhead sprinkler watering.',
+    audioGuideScript: 'किसान भाई, टमाटर की फसल में अगेती झुलसा रोग के लक्षण हैं। 5 मिलीलीटर नीम तेल प्रति लीटर पानी में मिलाकर सुबह पत्तियों पर छिड़कें, और निचली पीली पत्तियों को तोड़कर खेत से दूर नष्ट करें।',
     image: '/images/crops/tomato.png',
     referenceImg: 'https://images.unsplash.com/photo-1592417817098-8f3d6ef23a81?auto=format&fit=crop&w=600&q=80'
   },
@@ -162,6 +163,7 @@ const SAMPLE_LEAF_PRESETS = [
     organicRemedy: 'Bordeaux mixture (1%) or copper oxychloride spray (3g/L). Ensure well-drained soil.',
     chemicalRemedy: 'Cymoxanil 8% + Mancozeb 64% WP @ 1.5g/L or Metalaxyl 8% + Mancozeb 64% WP.',
     prevention: 'Use certified disease-free seed tubers and plant resistant varieties.',
+    audioGuideScript: 'किसान भाई, आलू की फसल में पिछेती झुलसा के लक्षण मिले हैं। 1 प्रतिशत बोर्डो मिश्रण या मैंकोजेब 2 ग्राम प्रति लीटर पानी में मिलाकर तुरंत छिड़काव करें और खेत में जलभराव न होने दें।',
     image: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=600&q=80',
     referenceImg: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=600&q=80'
   },
@@ -180,6 +182,7 @@ const SAMPLE_LEAF_PRESETS = [
     organicRemedy: 'Spray liquid sulfur formulations (3g/L) at early sign of rust pustules.',
     chemicalRemedy: 'Azoxystrobin 23% SC @ 1ml/L or Propiconazole 25% EC @ 1ml/L.',
     prevention: 'Plant resistant corn hybrids and avoid excessive nitrogen fertilizer application.',
+    audioGuideScript: 'किसान भाई, मक्का की फसल में रतुआ रोग के लक्षण हैं। रोग नियंत्रण के लिए 3 ग्राम सल्फर या 5 मिलीलीटर नीम तेल प्रति लीटर पानी में मिलाकर पत्तियों पर छिड़कें।',
     image: 'https://images.unsplash.com/photo-1601593346740-925612772716?auto=format&fit=crop&w=600&q=80',
     referenceImg: 'https://images.unsplash.com/photo-1601593346740-925612772716?auto=format&fit=crop&w=600&q=80'
   },
@@ -198,6 +201,7 @@ const SAMPLE_LEAF_PRESETS = [
     organicRemedy: 'Maintain regular balanced irrigation and bio-fertilizer schedule (Azotobacter & PSB).',
     chemicalRemedy: 'No chemical fungicides needed. Continue standard crop care.',
     prevention: 'Regular scouting once every 5 days during tillering phase.',
+    audioGuideScript: 'किसान भाई, आपकी गेहूं की फसल पूरी तरह स्वस्थ है। किसी भी दवा की आवश्यकता नहीं है, केवल नियमित सिंचाई और संतुलित पोषण बनाए रखें।',
     image: '/images/crops/wheat.png',
     referenceImg: '/images/crops/wheat.png'
   }
@@ -221,11 +225,7 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
   const [isListeningVoice, setIsListeningVoice] = useState(false);
   const [showScheduleToast, setShowScheduleToast] = useState(false);
 
-  // Fix 4: Gemini API Key State & Dynamic Cure Formulation
-  const [geminiKey, setGeminiKey] = useState(() => geminiService.getApiKey());
-  const [showKeyModal, setShowKeyModal] = useState(false);
-  const [keyInputValue, setKeyInputValue] = useState('');
-  const [keyTestStatus, setKeyTestStatus] = useState(null); // null | 'testing' | 'success' | 'error'
+  // Fix 4: Dynamic AI Cure Formulation State
   const [isGeneratingCure, setIsGeneratingCure] = useState(false);
 
   const videoRef = useRef(null);
@@ -255,8 +255,14 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
         if (updated) {
           setScanResult(prev => prev ? ({
             ...prev,
+            organicTitle: updated.organicTitle || prev.organicTitle,
+            organicDosage: updated.organicDosage || prev.organicDosage,
             organicRemedy: updated.organicRemedy || prev.organicRemedy,
+            fieldAction: updated.fieldAction || prev.fieldAction,
+            chemicalTitle: updated.chemicalTitle || prev.chemicalTitle,
+            chemicalDosage: updated.chemicalDosage || prev.chemicalDosage,
             chemicalRemedy: updated.chemicalRemedy || prev.chemicalRemedy,
+            preventTitle: updated.preventTitle || prev.preventTitle,
             prevention: updated.prevention || prev.prevention,
             audioGuideScript: updated.audioGuideScript,
             cureSource: updated.source
@@ -266,8 +272,8 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
     }
   }, [lang]);
 
-  // Fix 5: Android APK & Web Robust Speech Synthesis
-  const toggleAudioSpeech = (textOverride = null) => {
+  // Fix 5: Android APK & Web Robust Dynamic Speech Synthesis
+  const toggleAudioSpeech = async (textOverride = null) => {
     if (!('speechSynthesis' in window)) {
       alert(lang === 'hi' ? 'इस डिवाइस पर ऑडियो वाचन समर्थित नहीं है।' : 'Text-to-speech audio is not supported on this device.');
       return;
@@ -282,16 +288,68 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
 
     let speechText = textOverride;
     if (!speechText && scanResult) {
-      if (scanResult.audioGuideScript) {
-        speechText = scanResult.audioGuideScript;
+      const cacheKey = `spoken_${remedyTab}_${lang}`;
+      if (scanResult[cacheKey]) {
+        speechText = scanResult[cacheKey];
+      } else if (scanResult.status === 'healthy') {
+        speechText = lang === 'hi'
+          ? 'किसान भाई, आपकी फसल पूरी तरह स्वस्थ और रोगमुक्त है। किसी भी रासायनिक या कीटनाशक दवा की आवश्यकता नहीं है, केवल नियमित सिंचाई और संतुलित पोषण बनाए रखें।'
+          : 'Farmer brother, your crop is completely healthy and disease-free. No chemical sprays are needed, just maintain regular watering and organic nutrition.';
+      } else if (lang === 'hi') {
+        // Dynamic Hindi Speech Formulation based on active tab
+        if (remedyTab === 'chemical' && scanResult.chemicalDosage && /[\u0900-\u097F]/.test(scanResult.chemicalDosage)) {
+          const title = scanResult.chemicalTitle && /[\u0900-\u097F]/.test(scanResult.chemicalTitle) ? `${scanResult.chemicalTitle}। ` : '';
+          speechText = `रासायनिक दवा उपचार: ${title}${scanResult.chemicalDosage}। ${scanResult.chemicalRemedy || ''}`;
+        } else if (remedyTab === 'prevent' && scanResult.prevention && /[\u0900-\u097F]/.test(scanResult.prevention)) {
+          const title = scanResult.preventTitle && /[\u0900-\u097F]/.test(scanResult.preventTitle) ? `${scanResult.preventTitle}। ` : '';
+          speechText = `रोकथाम और सुरक्षा उपाय: ${title}${scanResult.prevention}`;
+        } else if (remedyTab === 'organic' && scanResult.organicDosage && /[\u0900-\u097F]/.test(scanResult.organicDosage)) {
+          const title = scanResult.organicTitle && /[\u0900-\u097F]/.test(scanResult.organicTitle) ? `${scanResult.organicTitle}। ` : '';
+          const action = scanResult.fieldAction && /[\u0900-\u097F]/.test(scanResult.fieldAction) ? ` खेत कार्य: ${scanResult.fieldAction}` : '';
+          speechText = `प्राकृतिक जैविक उपचार: ${title}${scanResult.organicDosage}। ${scanResult.organicRemedy || ''}${action}`;
+        } else if (scanResult.audioGuideScript && /[\u0900-\u097F]/.test(scanResult.audioGuideScript)) {
+          speechText = scanResult.audioGuideScript;
+        } else {
+          // Dynamically fetch from Gemini voice advisor matching the exact disease & active tab
+          try {
+            const tabQuestion = remedyTab === 'chemical'
+              ? 'इस फसल और रोग के लिए रासायनिक दवा और छिड़काव की सही मात्रा क्या है?'
+              : remedyTab === 'prevent'
+                ? 'इस फसल और रोग की रोकथाम के मुख्य उपाय क्या हैं?'
+                : 'इस फसल और रोग के लिए जैविक या प्राकृतिक उपचार क्या है?';
+
+            speechText = await geminiService.askVoiceAdvisor({
+              question: tabQuestion,
+              crop: scanResult.crop,
+              diseaseName: scanResult.diseaseName || scanResult.disease_name,
+              lang: 'hi'
+            });
+          } catch (e) {
+            speechText = 'फसल के रोगग्रस्त भागों को हटाएं और अनुशंसित कवकनाशी का सही मात्रा में छिड़काव करें।';
+          }
+        }
+
+        if (speechText) {
+          scanResult[cacheKey] = speechText;
+        }
       } else {
-        const disease = scanResult.diseaseName || scanResult.disease_name;
-        const remedy = remedyTab === 'organic' 
-          ? (scanResult.organicRemedy || scanResult.organic_remedy)
-          : (scanResult.chemicalRemedy || scanResult.chemical_remedy);
-        speechText = lang === 'hi' 
-          ? `फसल में ${disease} के लक्षण पाए गए हैं। उपचार के लिए: ${remedy}`
-          : `Detected ${disease}. Recommended treatment: ${remedy}`;
+        // English Mode
+        if (remedyTab === 'chemical' && scanResult.chemicalRemedy) {
+          speechText = `Chemical Treatment: ${scanResult.chemicalTitle ? scanResult.chemicalTitle + '. ' : ''}${scanResult.chemicalDosage || ''}. ${scanResult.chemicalRemedy}`;
+        } else if (remedyTab === 'prevent' && scanResult.prevention) {
+          speechText = `Preventative Measures: ${scanResult.preventTitle ? scanResult.preventTitle + '. ' : ''}${scanResult.prevention}`;
+        } else if (remedyTab === 'organic' && scanResult.organicRemedy) {
+          speechText = `Organic Remedy: ${scanResult.organicTitle ? scanResult.organicTitle + '. ' : ''}${scanResult.organicDosage || ''}. ${scanResult.organicRemedy}`;
+        } else if (scanResult.audioGuideScript) {
+          speechText = scanResult.audioGuideScript;
+        } else {
+          const disease = scanResult.diseaseName || scanResult.disease_name || 'Crop disease';
+          speechText = `Detected ${disease}. Please follow the instructions in the treatment deck.`;
+        }
+
+        if (speechText) {
+          scanResult[cacheKey] = speechText;
+        }
       }
     }
 
@@ -483,8 +541,14 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
           if (!prev) return prev;
           return {
             ...prev,
+            organicTitle: dynamicCure.organicTitle || prev.organicTitle,
+            organicDosage: dynamicCure.organicDosage || prev.organicDosage,
             organicRemedy: dynamicCure.organicRemedy || prev.organicRemedy,
+            fieldAction: dynamicCure.fieldAction || prev.fieldAction,
+            chemicalTitle: dynamicCure.chemicalTitle || prev.chemicalTitle,
+            chemicalDosage: dynamicCure.chemicalDosage || prev.chemicalDosage,
             chemicalRemedy: dynamicCure.chemicalRemedy || prev.chemicalRemedy,
+            preventTitle: dynamicCure.preventTitle || prev.preventTitle,
             prevention: dynamicCure.prevention || prev.prevention,
             audioGuideScript: dynamicCure.audioGuideScript,
             cureSource: dynamicCure.source
@@ -672,32 +736,6 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
     }
   };
 
-  // Test and Save Gemini API Key
-  const handleSaveGeminiKey = async () => {
-    const cleanKey = keyInputValue.trim();
-    setKeyTestStatus('testing');
-
-    if (!cleanKey) {
-      geminiService.setApiKey('');
-      setGeminiKey('');
-      setKeyTestStatus('success');
-      setTimeout(() => setShowKeyModal(false), 800);
-      return;
-    }
-
-    try {
-      geminiService.setApiKey(cleanKey);
-      // Run quick test query to verify key with Google
-      await geminiService.generateContent('Hi', 'Reply with OK');
-      setGeminiKey(cleanKey);
-      setKeyTestStatus('success');
-      setTimeout(() => setShowKeyModal(false), 900);
-    } catch (err) {
-      console.error('Gemini Key verification failed:', err);
-      setKeyTestStatus('error');
-    }
-  };
-
   const handleShareWhatsApp = () => {
     if (!scanResult) return;
     const disease = scanResult.diseaseName || scanResult.disease_name;
@@ -791,34 +829,6 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-          {/* Fix 4: Gemini AI Key Status Button */}
-          <button
-            onClick={() => {
-              setKeyInputValue(geminiKey || '');
-              setKeyTestStatus(null);
-              setShowKeyModal(true);
-            }}
-            style={{
-              background: geminiKey ? 'rgba(34, 197, 94, 0.25)' : 'rgba(255, 255, 255, 0.18)',
-              color: '#ffffff',
-              border: geminiKey ? '1px solid rgba(74, 222, 128, 0.5)' : '1px solid rgba(255, 255, 255, 0.3)',
-              padding: '0.45rem 0.95rem',
-              borderRadius: '999px',
-              fontWeight: 700,
-              fontSize: '0.82rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-              transition: 'all 0.2s ease'
-            }}
-            title="Configure Google Gemini API Key"
-          >
-            <Sparkles size={15} color={geminiKey ? '#86efac' : '#fde047'} />
-            <span>{geminiKey ? (lang === 'hi' ? 'Gemini AI एक्टिव' : 'Gemini AI Active') : (lang === 'hi' ? '🔑 Gemini Key' : '🔑 Gemini Key')}</span>
-          </button>
-
           {onNavigateFarm && (
             <button
               onClick={onNavigateFarm}
@@ -1421,34 +1431,11 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
 
               {/* Treatment Deck Section (from Screenshot 1 & 2) */}
               <div id="treatment-deck" style={{ marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
                   <h4 style={{ fontSize: '1.05rem', color: '#14281d', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Layers size={19} color="#15803d" />
                     <span>{t.treatmentDeck}</span>
                   </h4>
-
-                  {/* Fix 4: Live Gemini Cure Status Badge */}
-                  <div style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.4rem',
-                    background: scanResult.cureSource === 'gemini' ? '#ecfdf5' : '#f8fafc',
-                    border: `1px solid ${scanResult.cureSource === 'gemini' ? '#a7f3d0' : '#e2e8f0'}`,
-                    color: scanResult.cureSource === 'gemini' ? '#047857' : '#64748b',
-                    padding: '0.35rem 0.75rem',
-                    borderRadius: '999px',
-                    fontSize: '0.78rem',
-                    fontWeight: 700
-                  }}>
-                    <Sparkles size={14} color={scanResult.cureSource === 'gemini' ? '#10b981' : '#94a3b8'} />
-                    <span>
-                      {isGeneratingCure 
-                        ? (lang === 'hi' ? '✨ जेमिनी एआई उपचार तैयार हो रहा है...' : '✨ Formulating Gemini AI cure...')
-                        : scanResult.cureSource === 'gemini'
-                          ? (lang === 'hi' ? '✨ Gemini 1.5 Flash AI उपचार' : '✨ Gemini 1.5 Flash AI Cure')
-                          : (lang === 'hi' ? 'कृषि संस्तुति उपचार' : 'Agronomist Protocol')}
-                    </span>
-                  </div>
                 </div>
 
                 {/* Treatment Deck Tabs */}
@@ -1529,48 +1516,58 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
                 }}>
                   {remedyTab === 'organic' && (
                     <div>
-                      <div style={{ color: '#15803d', fontWeight: 800, fontSize: '0.95rem', marginBottom: '0.6rem' }}>
-                        🌱 Neem Oil & Bio-Fungicide Solution (नीम का तेल)
+                      <div style={{ color: '#15803d', fontWeight: 800, fontSize: '0.98rem', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span>🌱</span>
+                        <span>{scanResult.organicTitle || (lang === 'hi' ? 'जैविक उपचार' : 'Organic Remedy')}</span>
                       </div>
                       
-                      {/* Dosage Recipe with water drops (Screenshot 2) */}
-                      <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '0.85rem', borderRadius: '12px', marginBottom: '0.85rem' }}>
-                        <div style={{ fontSize: '0.86rem', color: '#166534', marginBottom: '0.35rem', fontWeight: 600 }}>
-                          💧 <strong>5 ml Neem Oil</strong> per 1L water (5 मि.ली. नीम तेल + 1L पानी)
+                      {/* Dynamic Dosage Recipe Card */}
+                      {scanResult.organicDosage && (
+                        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '0.85rem 1rem', borderRadius: '12px', marginBottom: '0.85rem' }}>
+                          <div style={{ fontSize: '0.88rem', color: '#166534', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <span>💧</span>
+                            <span>{scanResult.organicDosage}</span>
+                          </div>
                         </div>
-                        <div style={{ fontSize: '0.86rem', color: '#166534', fontWeight: 600 }}>
-                          💧 Add <strong>2 drops</strong> mild soap / detergent for spreadability
-                        </div>
-                      </div>
+                      )}
 
-                      <div style={{ color: '#374151', fontSize: '0.88rem', lineHeight: '1.6' }}>
+                      <div style={{ color: '#374151', fontSize: '0.9rem', lineHeight: '1.65' }}>
                         {scanResult.organicRemedy || scanResult.organic_remedy}
                       </div>
 
-                      <div style={{ marginTop: '0.85rem', borderTop: '1px solid #e5eae1', paddingTop: '0.75rem' }}>
-                        <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '0.75rem', borderRadius: '10px' }}>
-                          <div style={{ fontSize: '0.82rem', color: '#b45309', fontWeight: 800, marginBottom: '0.2rem' }}>
-                            🔍 {t.fieldActions}:
-                          </div>
-                          <div style={{ fontSize: '0.82rem', color: '#92400e' }}>
-                            • Prune lowest 15-20 cm of infected leaves to stop soil splash.
+                      {/* Dynamic Field Actions Checklist */}
+                      {scanResult.fieldAction && (
+                        <div style={{ marginTop: '0.85rem', borderTop: '1px solid #e5eae1', paddingTop: '0.75rem' }}>
+                          <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '0.75rem 1rem', borderRadius: '10px' }}>
+                            <div style={{ fontSize: '0.82rem', color: '#b45309', fontWeight: 800, marginBottom: '0.2rem' }}>
+                              🔍 {t.fieldActions}:
+                            </div>
+                            <div style={{ fontSize: '0.85rem', color: '#92400e', fontWeight: 600 }}>
+                              • {scanResult.fieldAction}
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   )}
 
                   {remedyTab === 'chemical' && (
                     <div>
-                      <div style={{ color: '#d97706', fontWeight: 800, fontSize: '0.95rem', marginBottom: '0.6rem' }}>
-                        🧪 Standard Fungicide Spray
+                      <div style={{ color: '#d97706', fontWeight: 800, fontSize: '0.98rem', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span>🧪</span>
+                        <span>{scanResult.chemicalTitle || (lang === 'hi' ? 'रासायनिक कवकनाशी' : 'Chemical Treatment')}</span>
                       </div>
-                      <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '0.85rem', borderRadius: '12px', marginBottom: '0.85rem' }}>
-                        <div style={{ fontSize: '0.86rem', color: '#92400e', fontWeight: 600 }}>
-                          💧 Apply <strong>2g per liter</strong> of water using flat-fan nozzle sprayer.
+
+                      {scanResult.chemicalDosage && (
+                        <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '0.85rem 1rem', borderRadius: '12px', marginBottom: '0.85rem' }}>
+                          <div style={{ fontSize: '0.88rem', color: '#92400e', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <span>💧</span>
+                            <span>{scanResult.chemicalDosage}</span>
+                          </div>
                         </div>
-                      </div>
-                      <div style={{ color: '#374151', fontSize: '0.88rem', lineHeight: '1.6' }}>
+                      )}
+
+                      <div style={{ color: '#374151', fontSize: '0.9rem', lineHeight: '1.65' }}>
                         {scanResult.chemicalRemedy || scanResult.chemical_remedy}
                       </div>
                     </div>
@@ -1578,11 +1575,13 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
 
                   {remedyTab === 'prevent' && (
                     <div>
-                      <div style={{ color: '#1e40af', fontWeight: 800, fontSize: '0.95rem', marginBottom: '0.6rem' }}>
-                        🛡️ Crop Rotation & Canopy Sanitation
+                      <div style={{ color: '#1e40af', fontWeight: 800, fontSize: '0.98rem', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span>🛡️</span>
+                        <span>{scanResult.preventTitle || (lang === 'hi' ? 'रोग रोकथाम एवं स्वच्छता' : 'Prevention Strategy')}</span>
                       </div>
-                      <div style={{ color: '#374151', fontSize: '0.88rem', lineHeight: '1.6' }}>
-                        {scanResult.prevention || 'Maintain 60cm plant spacing for air circulation and avoid sprinkler irrigation.'}
+
+                      <div style={{ color: '#374151', fontSize: '0.9rem', lineHeight: '1.65' }}>
+                        {scanResult.prevention || (lang === 'hi' ? 'फसल चक्र अपनाएं, संतुलित खाद दें और खेत में उचित जलनिकासी रखें।' : 'Maintain crop spacing, balanced fertilizers, and good drainage.')}
                       </div>
                     </div>
                   )}
@@ -1730,7 +1729,7 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#15803d', fontWeight: 800 }}>
                 <Bot size={22} />
-                <span>{lang === 'hi' ? 'जेमिनी एआई कृषि विशेषज्ञ से पूछें' : 'Gemini AI Agronomist Voice Advisor'}</span>
+                <span>{lang === 'hi' ? 'कृषि विशेषज्ञ एआई सलाहकार' : 'Agri Bandhu Agronomist Voice Advisor'}</span>
               </div>
               <button 
                 onClick={() => { 
@@ -1748,43 +1747,22 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
               </button>
             </div>
 
-            {/* Gemini Live AI Status Badge */}
+            {/* AI Advisor Status Badge */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
+              gap: '0.45rem',
               background: '#f0fdf4',
               border: '1px solid #bbf7d0',
-              padding: '0.45rem 0.85rem',
+              padding: '0.5rem 0.85rem',
               borderRadius: '10px',
               marginBottom: '1rem',
-              fontSize: '0.8rem',
+              fontSize: '0.82rem',
               color: '#166534',
               fontWeight: 600
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Sparkles size={14} color="#15803d" />
-                <span>{geminiKey ? 'Gemini 1.5 Flash AI Active' : (lang === 'hi' ? 'Gemini API Key सेट करें' : 'Set Gemini API Key')}</span>
-              </div>
-              <button
-                onClick={() => {
-                  setShowVoiceModal(false);
-                  setKeyInputValue(geminiKey || '');
-                  setKeyTestStatus(null);
-                  setShowKeyModal(true);
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#15803d',
-                  fontWeight: 700,
-                  fontSize: '0.78rem',
-                  cursor: 'pointer',
-                  textDecoration: 'underline'
-                }}
-              >
-                {lang === 'hi' ? 'कुंजी बदलें' : 'Edit Key'}
-              </button>
+              <Sparkles size={15} color="#15803d" />
+              <span>{lang === 'hi' ? 'एआई लाइव कृषि वैज्ञानिक • आपकी भाषा में समाधान' : 'AI Live Agronomist • Speaking your language'}</span>
             </div>
 
             {/* Central Animated Voice Recording Button (Fix 5) */}
@@ -1828,7 +1806,7 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
                 type="text"
                 value={userQuestion}
                 onChange={(e) => setUserQuestion(e.target.value)}
-                placeholder={lang === 'hi' ? 'जैसे: नीम तेल का छिड़काव कब करें?' : 'e.g., When should I spray neem oil?'}
+                placeholder={lang === 'hi' ? 'जैसे: दवा छिड़काव की सही मात्रा क्या है?' : 'e.g., What is the exact spray dosage?'}
                 style={{
                   flex: 1,
                   background: '#f8faf6',
@@ -1852,11 +1830,19 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
 
             {/* Quick Question Chips */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '1.25rem' }}>
-              {[
-                lang === 'hi' ? 'नीम तेल कब छिड़कें?' : 'Best time to spray neem oil?',
-                lang === 'hi' ? 'सिंचाई कब करें?' : 'When to irrigate?',
-                lang === 'hi' ? 'दवा की सही मात्रा क्या है?' : 'What is the exact dosage?'
-              ].map((chip, idx) => (
+              {(scanResult?.status === 'healthy'
+                ? [
+                    lang === 'hi' ? 'पौधे की अच्छी वृद्धि के लिए क्या करें?' : 'How to boost crop growth?',
+                    lang === 'hi' ? 'सिंचाई कब और कितनी करें?' : 'When and how much to irrigate?',
+                    lang === 'hi' ? 'जैविक पोषण की सही मात्रा क्या है?' : 'Best organic nutrition dosage?'
+                  ]
+                : [
+                    lang === 'hi' ? 'दवा की सही मात्रा क्या है?' : 'What is the exact dosage?',
+                    lang === 'hi' ? 'रोग को फैलने से कैसे रोकें?' : 'How to stop disease spread?',
+                    lang === 'hi' ? 'छिड़काव का सबसे सही समय क्या है?' : 'Best time to spray?',
+                    lang === 'hi' ? 'क्या जैविक उपचार उपलब्ध है?' : 'Is organic treatment available?'
+                  ]
+              ).map((chip, idx) => (
                 <button
                   key={idx}
                   onClick={() => { setUserQuestion(chip); handleAskQuestion(chip); }}
@@ -1890,7 +1876,7 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
                 <div style={{ fontWeight: 800, color: '#15803d', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                     <Sparkles size={16} />
-                    <span>Agri Bandhu Gemini Advisor:</span>
+                    <span>{lang === 'hi' ? 'कृषि बंधु एआई विशेषज्ञ उत्तर:' : 'Agri Bandhu AI Expert Advice:'}</span>
                   </div>
                   <button
                     onClick={() => toggleAudioSpeech(aiAnswer)}
@@ -1915,123 +1901,6 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
                 {aiAnswer}
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* Fix 4: Gemini API Key Setup Modal for Web & APK */}
-      {showKeyModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(10, 20, 16, 0.65)',
-          backdropFilter: 'blur(6px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '1rem'
-        }}>
-          <div className="glass-panel" style={{
-            maxWidth: '460px',
-            width: '100%',
-            padding: '2rem',
-            background: '#ffffff',
-            border: '1px solid #e5eae1',
-            borderRadius: '20px',
-            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#15803d', fontWeight: 800 }}>
-                <Key size={22} />
-                <span>{lang === 'hi' ? 'Google Gemini API Key' : 'Configure Gemini API Key'}</span>
-              </div>
-              <button 
-                onClick={() => setShowKeyModal(false)}
-                style={{ background: 'transparent', border: 'none', color: '#6b7280', cursor: 'pointer' }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <p style={{ color: '#4b5563', fontSize: '0.86rem', lineHeight: '1.5', marginBottom: '1.25rem' }}>
-              {lang === 'hi' 
-                ? 'रोग पहचान के बाद गतिशील जैविक व रासायनिक उपचार नुस्खे बनाने तथा वॉइस सलाहकार के लिए अपनी Google Gemini API कुंजी दर्ज करें।' 
-                : 'Enter your Google Gemini API key to formulate real-time customized disease treatments and power the voice agronomist advisor.'}
-            </p>
-
-            <div style={{ marginBottom: '1.25rem' }}>
-              <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#14281d', marginBottom: '0.4rem' }}>
-                Gemini API Key (Google AI Studio)
-              </label>
-              <input
-                type="password"
-                value={keyInputValue}
-                onChange={(e) => { setKeyInputValue(e.target.value); setKeyTestStatus(null); }}
-                placeholder="AIzaSy..."
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  background: '#f8faf6',
-                  border: '1.5px solid #cbd5e1',
-                  borderRadius: '12px',
-                  color: '#14281d',
-                  fontSize: '0.92rem',
-                  outline: 'none'
-                }}
-              />
-              <div style={{ fontSize: '0.76rem', color: '#6b7280', marginTop: '0.4rem' }}>
-                {lang === 'hi' ? 'मुफ्त कुंजी प्राप्त करें:' : 'Get free key from:'} <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: '#15803d', fontWeight: 700 }}>Google AI Studio</a>
-              </div>
-            </div>
-
-            {keyTestStatus === 'success' && (
-              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '0.75rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
-                <CheckCircle2 size={18} color="#166534" />
-                <span>{lang === 'hi' ? 'Gemini API सफलतापूर्वक कनेक्ट हो गई!' : 'Gemini API verified and saved successfully!'}</span>
-              </div>
-            )}
-
-            {keyTestStatus === 'error' && (
-              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '0.75rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
-                <AlertTriangle size={18} color="#dc2626" />
-                <span>{lang === 'hi' ? 'अमान्य API कुंजी या नेटवर्क त्रुटि। कृपया कुंजी जांचें।' : 'Invalid API key or network error. Please verify your key.'}</span>
-              </div>
-            )}
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setKeyInputValue('');
-                  geminiService.setApiKey('');
-                  setGeminiKey('');
-                  setShowKeyModal(false);
-                }}
-                style={{
-                  background: '#f3f4f6',
-                  border: 'none',
-                  padding: '0.75rem',
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                  fontSize: '0.88rem',
-                  color: '#4b5563',
-                  cursor: 'pointer'
-                }}
-              >
-                {lang === 'hi' ? 'कुंजी हटाएं' : 'Clear Key'}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleSaveGeminiKey}
-                disabled={keyTestStatus === 'testing'}
-                className="btn-primary"
-                style={{ padding: '0.75rem', fontSize: '0.88rem' }}
-              >
-                {keyTestStatus === 'testing' ? 'Testing...' : (lang === 'hi' ? 'सहेजें व टेस्ट करें' : 'Save & Test')}
-              </button>
-            </div>
           </div>
         </div>
       )}

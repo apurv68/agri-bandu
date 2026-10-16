@@ -75,6 +75,27 @@ export default function App() {
   }, [lang]);
 
   useEffect(() => {
+    // Check if URL contains Google OAuth redirect parameters
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isGoogleAuth = urlParams.get('google_auth');
+      const token = urlParams.get('token');
+      const rawUser = urlParams.get('user');
+
+      if (isGoogleAuth === 'success' && rawUser) {
+        const decodedUser = JSON.parse(atob(decodeURIComponent(rawUser)));
+        if (token) {
+          localStorage.setItem('agri_auth_token', token);
+        }
+        localStorage.setItem('agri_user', JSON.stringify(decodedUser));
+        setUser(decodedUser);
+        setActivePage('detector');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    } catch (err) {
+      console.warn('OAuth URL parse error:', err);
+    }
+
     const currentUser = authService.getCurrentUser();
     if (currentUser) {
       setUser(currentUser);
