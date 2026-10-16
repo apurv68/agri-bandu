@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { diseaseService } from '../services/api';
 import { geminiService } from '../services/geminiService';
+import { Capacitor } from '@capacitor/core';
+import { TextToSpeech } from '@capacitor-community/text-to-speech';
 
 
 // Reference samples for interactive leaf comparison
@@ -272,16 +274,26 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
     }
   }, [lang]);
 
-  // Fix 5: Android APK & Web Robust Dynamic Speech Synthesis
+  // Fix 5: Multi-layer Speech System (Native Android APK TTS + Web Speech Synthesis + HTML5 Audio fallback)
   const toggleAudioSpeech = async (textOverride = null) => {
-    if (!('speechSynthesis' in window)) {
-      alert(lang === 'hi' ? 'इस डिवाइस पर ऑडियो वाचन समर्थित नहीं है।' : 'Text-to-speech audio is not supported on this device.');
-      return;
-    }
-
+    // If audio is currently playing, stop all sound channels immediately
     if (isPlayingAudio) {
       window.__agriSpeechStopRequested = true;
-      window.speechSynthesis.cancel();
+      try {
+        if (Capacitor.isNativePlatform()) {
+          await TextToSpeech.stop();
+        }
+      } catch (e) {}
+
+      if ('speechSynthesis' in window && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+
+      if (window.__agriAudio) {
+        window.__agriAudio.pause();
+        window.__agriAudio = null;
+      }
+
       setIsPlayingAudio(false);
       window.__agriUtterance = null;
       window.__agriSpeechQueue = [];
@@ -321,7 +333,6 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
                 : 'इस फसल और रोग के लिए जैविक या प्राकृतिक उपचार क्या है?';
 
             speechText = await geminiService.askVoiceAdvisor({
-              question: tabQuestion,
               crop: scanResult.crop,
               diseaseName: scanResult.diseaseName || scanResult.disease_name,
               lang: 'hi'
@@ -359,87 +370,128 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
 
     // Clean markdown characters (*, #, _, `)
     const cleanSpeech = speechText.replace(/[*#_`]/g, '').trim();
-
-    // Cancel any previous speech and reset stop flag
-    window.speechSynthesis.cancel();
     window.__agriSpeechStopRequested = false;
 
-    // Split text into natural sentence chunks for rock-solid playback across Android & Chrome
-    const rawChunks = cleanSpeech
-      .split(/(?<=[।!?.\n])\s+/)
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
-
-    const sentenceQueue = [];
-    rawChunks.forEach(chunk => {
-      if (chunk.length > 120) {
-        const subParts = chunk.split(/(?<=[,;])\s+/);
-        subParts.forEach(sp => {
-          if (sp.trim().length > 0) sentenceQueue.push(sp.trim());
-        });
-      } else {
-        sentenceQueue.push(chunk);
-      }
-    });
-
-    if (sentenceQueue.length === 0) return;
-
-    window.__agriSpeechQueue = sentenceQueue;
-    window.__agriSpeechIndex = 0;
-    setIsPlayingAudio(true);
-
-    const voices = window.speechSynthesis.getVoices();
-    const matchPrefix = lang === 'hi' ? 'hi' : 'en';
-    const matchedVoice = voices?.find(v => v.lang.toLowerCase().startsWith(matchPrefix));
-
-    const playNextChunk = () => {
-      if (window.__agriSpeechStopRequested) {
-        setIsPlayingAudio(false);
-        window.__agriSpeechQueue = [];
-        return;
-      }
-
-      if (window.__agriSpeechIndex >= window.__agriSpeechQueue.length) {
-        setIsPlayingAudio(false);
-        window.__agriUtterance = null;
-        window.__agriSpeechQueue = [];
-        return;
-      }
-
-      const currentText = window.__agriSpeechQueue[window.__agriSpeechIndex];
-      const utterance = new SpeechSynthesisUtterance(currentText);
-      utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
-      utterance.rate = 0.95;
-      utterance.pitch = 1.0;
-
-      if (matchedVoice) {
-        utterance.voice = matchedVoice;
-      }
-
-      // Keep utterance in global window object to prevent V8 GC from stopping speech mid-sentence
-      window.__agriUtterance = utterance;
-
-      utterance.onend = () => {
-        window.__agriSpeechIndex += 1;
-        playNextChunk();
-      };
-
-      utterance.onerror = (err) => {
-        console.warn('Speech chunk error, advancing to next sentence:', err);
-        window.__agriSpeechIndex += 1;
-        playNextChunk();
-      };
-
+    // LAYER 1: Native Android Text-to-Speech (When running in APK)
+    if (Capacitor.isNativePlatform()) {
+      setIsPlayingAudio(true);
       try {
-        window.speechSynthesis.speak(utterance);
-      } catch (err) {
-        console.warn('Speech synthesis speak error:', err);
+        await TextToSpeech.speak({
+          text: cleanSpeech,
+          lang: lang === 'hi' ? 'hi-IN' : 'en-US',
+          rate: 1.0,
+          pitch: 1.0,
+          volume: 1.0,
+          category: 'ambient',
+        });
         setIsPlayingAudio(false);
+        return;
+      } catch (nativeErr) {
+        console.warn('Native TTS stopped or failed:', nativeErr);
+        setIsPlayingAudio(false);
+        return;
       }
-    };
+    }
 
-    // Play first sentence chunk
-    playNextChunk();
+    // LAYER 2: Web Speech Synthesis with Queue (Chrome, Edge, Safari Desktop & Mobile Browser)
+    if ('speechSynthesis' in window && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+
+      // Split text into natural sentence chunks for rock-solid playback
+      const rawChunks = cleanSpeech
+        .split(/(?<=[।!?.\n])\s+/)
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+
+      const sentenceQueue = [];
+      rawChunks.forEach(chunk => {
+        if (chunk.length > 120) {
+          const subParts = chunk.split(/(?<=[,;])\s+/);
+          subParts.forEach(sp => {
+            if (sp.trim().length > 0) sentenceQueue.push(sp.trim());
+          });
+        } else {
+          sentenceQueue.push(chunk);
+        }
+      });
+
+      if (sentenceQueue.length === 0) {
+        setIsPlayingAudio(false);
+        return;
+      }
+
+      window.__agriSpeechQueue = sentenceQueue;
+      window.__agriSpeechIndex = 0;
+      setIsPlayingAudio(true);
+
+      const voices = window.speechSynthesis.getVoices();
+      const matchPrefix = lang === 'hi' ? 'hi' : 'en';
+      const matchedVoice = voices?.find(v => v.lang.toLowerCase().startsWith(matchPrefix));
+
+      const playNextChunk = () => {
+        if (window.__agriSpeechStopRequested) {
+          setIsPlayingAudio(false);
+          window.__agriSpeechQueue = [];
+          return;
+        }
+
+        if (window.__agriSpeechIndex >= window.__agriSpeechQueue.length) {
+          setIsPlayingAudio(false);
+          window.__agriUtterance = null;
+          window.__agriSpeechQueue = [];
+          return;
+        }
+
+        const currentText = window.__agriSpeechQueue[window.__agriSpeechIndex];
+        const utterance = new SpeechSynthesisUtterance(currentText);
+        utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
+        utterance.rate = 0.95;
+        utterance.pitch = 1.0;
+
+        if (matchedVoice) {
+          utterance.voice = matchedVoice;
+        }
+
+        window.__agriUtterance = utterance;
+
+        utterance.onend = () => {
+          window.__agriSpeechIndex += 1;
+          playNextChunk();
+        };
+
+        utterance.onerror = (err) => {
+          console.warn('Speech chunk error, advancing:', err);
+          window.__agriSpeechIndex += 1;
+          playNextChunk();
+        };
+
+        try {
+          window.speechSynthesis.speak(utterance);
+        } catch (err) {
+          console.warn('Speech synthesis speak error:', err);
+          setIsPlayingAudio(false);
+        }
+      };
+
+      playNextChunk();
+      return;
+    }
+
+    // LAYER 3: Audio Stream Fallback
+    try {
+      setIsPlayingAudio(true);
+      const ttsLang = lang === 'hi' ? 'hi' : 'en';
+      const shortText = cleanSpeech.length > 200 ? cleanSpeech.substring(0, 195) + '...' : cleanSpeech;
+      const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${ttsLang}&client=tw-ob&q=${encodeURIComponent(shortText)}`;
+      const audio = new Audio(audioUrl);
+      window.__agriAudio = audio;
+      audio.onended = () => setIsPlayingAudio(false);
+      audio.onerror = () => setIsPlayingAudio(false);
+      await audio.play();
+    } catch (e) {
+      console.warn('Audio fallback error:', e);
+      setIsPlayingAudio(false);
+    }
   };
 
   // Fix 7: Enforce login before starting camera

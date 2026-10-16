@@ -312,6 +312,10 @@ h1, h2, h3, h4, h5, h6 {
   position: sticky !important;
   top: 0 !important;
   z-index: 99 !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+  box-sizing: border-box !important;
+  padding: 0.55rem 0.75rem !important;
 }
 
 .hamburger-btn {
@@ -328,5 +332,14 @@ h1, h2, h3, h4, h5, h6 {
   }
   .agri-nav-subtitle {
     display: none !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .agri-topbar {
+    padding: 0.45rem 0.5rem !important;
+  }
+  .hamburger-btn {
+    padding: 0.4rem 0.5rem !important;
   }
 }

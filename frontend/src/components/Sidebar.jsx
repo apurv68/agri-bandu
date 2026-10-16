@@ -118,20 +118,9 @@ export default function Sidebar({
               }}
             />
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
                 <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em' }}>
                   Agri<span style={{ color: '#86efac' }}>Bandhu</span>
-                </span>
-                <span style={{
-                  fontSize: '0.62rem',
-                  background: 'rgba(134, 239, 172, 0.15)',
-                  color: '#86efac',
-                  padding: '0.12rem 0.45rem',
-                  borderRadius: '999px',
-                  fontWeight: 700,
-                  border: '1px solid rgba(134, 239, 172, 0.3)'
-                }}>
-                  v2.5
                 </span>
               </div>
               <p style={{ margin: 0, fontSize: '0.7rem', color: '#a7f3d0', opacity: 0.85 }}>

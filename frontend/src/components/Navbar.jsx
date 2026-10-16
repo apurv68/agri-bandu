@@ -74,21 +74,9 @@ export default function Navbar({
             }} 
           />
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
               <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
                 Agri<span style={{ color: '#86efac' }}>Bandhu</span>
-              </span>
-              <span style={{
-                fontSize: '0.62rem',
-                background: 'rgba(134, 239, 172, 0.18)',
-                color: '#86efac',
-                padding: '0.12rem 0.5rem',
-                borderRadius: '999px',
-                fontWeight: 800,
-                border: '1px solid rgba(134, 239, 172, 0.35)',
-                letterSpacing: '0.02em'
-              }}>
-                v2.5
               </span>
             </div>
             <p className="agri-nav-subtitle" style={{ margin: 0, fontSize: '0.72rem', color: '#bbf7d0', opacity: 0.9, fontWeight: 500, lineHeight: 1.2 }}>
