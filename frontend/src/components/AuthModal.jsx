@@ -18,7 +18,7 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
     const raw = import.meta.env?.VITE_GOOGLE_CLIENT_ID;
     if (raw && raw.trim().length > 10) return raw.trim();
     try {
-      const b64 = import.meta.env?.VITE_GOOGLE_CLIENT_ID_B64 || 'OTQ5NzgzMjk4OTk2LXQycmlmcG9lbjFzaDg4aHQ4ZmlyMDBndGo5bWpjdTNlLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29t';
+      const b64 = import.meta.env?.VITE_GOOGLE_CLIENT_ID_B64 || 'ODUxOTc4Njk0MjA3LTZ2a2J1ZDV0czIzbmN2c2dyOWEyNXEzMzJqanE4Ymw2LmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29t';
       if (typeof atob === 'function') return atob(b64).trim();
     } catch (e) {}
     return '';
@@ -111,8 +111,6 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const [showQuickGoogle, setShowQuickGoogle] = useState(false);
-  const [quickGoogleEmail, setQuickGoogleEmail] = useState('');
 
   // Official Google OAuth 2.0 Direct Sign-In
   const redirectToGoogleOAuth = () => {
@@ -178,17 +176,6 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
     }
 
     redirectToGoogleOAuth();
-  };
-
-  const handleQuickGoogleSubmit = async (e) => {
-    e.preventDefault();
-    if (!quickGoogleEmail || !isValidEmail(quickGoogleEmail)) {
-      setError(lang === 'hi' ? 'कृपया सही Google ईमेल (उदा. kisan@gmail.com) दर्ज करें।' : 'Please enter a valid Google email.');
-      return;
-    }
-    const nameFromEmail = quickGoogleEmail.split('@')[0].replace(/[._0-9]/g, ' ').trim();
-    const formattedName = nameFromEmail ? nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1) : 'Google User';
-    await executeGoogleLogin(quickGoogleEmail.trim(), formattedName);
   };
 
   // Direct 1-Step Registration
@@ -476,7 +463,7 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
             justifyContent: 'center',
             gap: '0.75rem',
             boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-            marginBottom: '0.65rem',
+            marginBottom: '1.25rem',
             transition: 'all 0.2s ease',
             opacity: loading ? 0.7 : 1
           }}
@@ -490,66 +477,6 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
           </svg>
           <span>{loading ? 'Connecting Google...' : t.googleSignIn}</span>
         </button>
-
-        {/* 1-Click Direct Google Account Fallback / Quick Sign-in */}
-        <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
-          <button
-            type="button"
-            onClick={() => setShowQuickGoogle(!showQuickGoogle)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#059669',
-              fontSize: '0.82rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              textDecoration: 'underline',
-              padding: '0.2rem'
-            }}
-          >
-            {showQuickGoogle 
-              ? (lang === 'hi' ? '✕ त्वरित Google बॉक्स बंद करें' : '✕ Close Quick Google Sign-In')
-              : (lang === 'hi' ? '⚡ Google ईमेल से तुरंत 1-क्लिक लॉगिन' : '⚡ 1-Click Login with Google Email')}
-          </button>
-
-          {showQuickGoogle && (
-            <form onSubmit={handleQuickGoogleSubmit} style={{ marginTop: '0.65rem', display: 'flex', gap: '0.5rem' }}>
-              <input
-                type="email"
-                required
-                placeholder={lang === 'hi' ? 'अपना जीमेल दर्ज करें (उदा. apurvgoel68@gmail.com)' : 'Enter your Gmail (e.g. apurvgoel68@gmail.com)'}
-                value={quickGoogleEmail}
-                onChange={(e) => setQuickGoogleEmail(e.target.value)}
-                style={{
-                  flex: 1,
-                  padding: '0.65rem 0.85rem',
-                  fontSize: '0.88rem',
-                  borderRadius: '10px',
-                  border: '1.5px solid #d1d5db',
-                  outline: 'none',
-                  background: '#ffffff'
-                }}
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  padding: '0.65rem 1rem',
-                  background: '#059669',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '10px',
-                  fontWeight: 700,
-                  fontSize: '0.86rem',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                {lang === 'hi' ? 'लॉगिन' : 'Log In'}
-              </button>
-            </form>
-          )}
-        </div>
 
         {/* Divider */}
         <div style={{

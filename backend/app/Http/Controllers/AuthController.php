@@ -275,8 +275,7 @@ class AuthController extends Controller
         }
 
         try {
-            $defaultClientId = base64_decode('OTQ5NzgzMjk4OTk2LXQycmlmcG9lbjFzaDg4aHQ4ZmlyMDBndGo5bWpjdTNlLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29t');
-            $clientId = env('GOOGLE_CLIENT_ID', $defaultClientId);
+            $clientId = env('GOOGLE_CLIENT_ID');
             $clientSecret = env('GOOGLE_CLIENT_SECRET');
             $redirectUri = env('GOOGLE_REDIRECT_URI', ($currentOrigin ?: 'http://localhost:3000') . '/api/auth/google/callback');
 
