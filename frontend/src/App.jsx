@@ -1,5 +1,6 @@
 import React, { useState, useEffect, Component } from 'react';
 import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
 import AuthModal from './components/AuthModal';
 import DiseaseDetector from './components/DiseaseDetector';
 import WeatherAndCrops from './components/WeatherAndCrops';
@@ -67,6 +68,7 @@ import { TRANSLATIONS } from './translations';
 
 export default function App() {
   const [activePage, setActivePage] = useState('detector'); // 'auth' | 'detector' | 'weather' | 'farm'
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [lang, setLang] = useState(() => localStorage.getItem('agri_lang') || 'hi');
 
@@ -110,10 +112,10 @@ export default function App() {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.hi;
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', width: '100%', overflowX: 'hidden' }}>
       
-      {/* Top Navbar Header */}
-      <Navbar
+      {/* Slide-in Left Navigation Tools Drawer (Web & Mobile APK) */}
+      <Sidebar
         activePage={activePage}
         setActivePage={setActivePage}
         user={user}
@@ -121,68 +123,86 @@ export default function App() {
         onLogout={handleLogout}
         lang={lang}
         setLang={setLang}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
 
-      {/* Main Content View Switcher */}
-      <ErrorBoundary>
-        <main style={{ flex: 1 }}>
-          {activePage === 'auth' && (
-            <AuthModal
-              user={user}
-              setUser={setUser}
-              onScanRedirect={() => setActivePage('detector')}
-              lang={lang}
-            />
-          )}
+      {/* Main App Viewport (100% Full Screen Width) */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: '100vh', width: '100%' }}>
+        
+        {/* Top Header Bar with Original Branding & Slide-in Tools Button */}
+        <Navbar
+          activePage={activePage}
+          setActivePage={setActivePage}
+          user={user}
+          onOpenAuth={() => setActivePage('auth')}
+          onLogout={handleLogout}
+          lang={lang}
+          setLang={setLang}
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        />
 
-          {activePage === 'detector' && (
-            <DiseaseDetector 
-              user={user} 
-              onNavigateFarm={() => setActivePage('farm')}
-              onOpenAuth={() => setActivePage('auth')}
-              lang={lang}
-              setLang={setLang}
-            />
-          )}
+        {/* Main Content View Switcher */}
+        <ErrorBoundary>
+          <main style={{ flex: 1 }}>
+            {activePage === 'auth' && (
+              <AuthModal
+                user={user}
+                setUser={setUser}
+                onScanRedirect={() => setActivePage('detector')}
+                lang={lang}
+              />
+            )}
 
-          {activePage === 'weather' && (
-            <WeatherAndCrops 
-              lang={lang}
-            />
-          )}
+            {activePage === 'detector' && (
+              <DiseaseDetector 
+                user={user} 
+                onNavigateFarm={() => setActivePage('farm')}
+                onOpenAuth={() => setActivePage('auth')}
+                lang={lang}
+                setLang={setLang}
+              />
+            )}
 
-          {activePage === 'farm' && (
-            <FarmManager 
-              user={user} 
-              onScanRedirect={() => setActivePage('detector')}
-              lang={lang}
-            />
-          )}
-        </main>
-      </ErrorBoundary>
+            {activePage === 'weather' && (
+              <WeatherAndCrops 
+                lang={lang}
+              />
+            )}
 
-      {/* Modern Footer */}
-      <footer style={{
-        marginTop: 'auto',
-        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-        background: '#0e2a1b',
-        padding: '1.5rem 1.5rem',
-        textAlign: 'center',
-        color: '#bbf7d0',
-        fontSize: '0.88rem',
-      }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff', fontWeight: 600 }}>
-            <img src="/agri-logo.png" alt="Logo" style={{ width: '22px', height: '22px', borderRadius: '6px' }} />
-            <span>{t.footerTagline}</span>
+            {activePage === 'farm' && (
+              <FarmManager 
+                user={user} 
+                onScanRedirect={() => setActivePage('detector')}
+                lang={lang}
+              />
+            )}
+          </main>
+        </ErrorBoundary>
+
+        {/* Modern Footer */}
+        <footer style={{
+          marginTop: 'auto',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          background: '#0e2a1b',
+          padding: '1.25rem 1.5rem',
+          textAlign: 'center',
+          color: '#bbf7d0',
+          fontSize: '0.88rem',
+        }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff', fontWeight: 600 }}>
+              <img src="/agri-logo.png" alt="Logo" style={{ width: '22px', height: '22px', borderRadius: '6px' }} />
+              <span>{t.footerTagline}</span>
+            </div>
+
+            <div style={{ fontSize: '0.8rem', color: '#a7f3d0' }}>
+              {t.footerLove}
+            </div>
           </div>
+        </footer>
 
-          <div style={{ fontSize: '0.8rem', color: '#a7f3d0' }}>
-            {t.footerLove}
-          </div>
-        </div>
-      </footer>
-
+      </div>
     </div>
   );
 }

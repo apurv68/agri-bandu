@@ -216,7 +216,7 @@ export default function FarmManager({ user, onScanRedirect, lang = 'hi' }) {
             <Sprout size={18} />
             <span>{t.tabFarms}</span>
           </div>
-          <h2 style={{ fontSize: '1.9rem', fontWeight: 800, margin: '0.3rem 0 0 0' }}>
+          <h2 style={{ fontSize: '1.9rem', fontWeight: 800, margin: '0.3rem 0 0 0', color: '#ffffff' }}>
             {t.farmTitle}
           </h2>
           <p style={{ color: '#bbf7d0', fontSize: '0.9rem', margin: '0.3rem 0 0 0', opacity: 0.9 }}>

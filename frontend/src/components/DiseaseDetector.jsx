@@ -280,9 +280,11 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
     }
 
     if (isPlayingAudio) {
+      window.__agriSpeechStopRequested = true;
       window.speechSynthesis.cancel();
       setIsPlayingAudio(false);
       window.__agriUtterance = null;
+      window.__agriSpeechQueue = [];
       return;
     }
 
@@ -358,59 +360,86 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
     // Clean markdown characters (*, #, _, `)
     const cleanSpeech = speechText.replace(/[*#_`]/g, '').trim();
 
-    // Android WebView Fix 1: cancel stuck speech queue
+    // Cancel any previous speech and reset stop flag
     window.speechSynthesis.cancel();
+    window.__agriSpeechStopRequested = false;
 
-    // Android WebView Fix 2: resume paused engine
-    if (window.speechSynthesis.paused) {
-      window.speechSynthesis.resume();
-    }
+    // Split text into natural sentence chunks for rock-solid playback across Android & Chrome
+    const rawChunks = cleanSpeech
+      .split(/(?<=[।!?.\n])\s+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
 
-    const utterance = new SpeechSynthesisUtterance(cleanSpeech);
-    utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
-    utterance.rate = 0.92;
-    utterance.pitch = 1.0;
+    const sentenceQueue = [];
+    rawChunks.forEach(chunk => {
+      if (chunk.length > 120) {
+        const subParts = chunk.split(/(?<=[,;])\s+/);
+        subParts.forEach(sp => {
+          if (sp.trim().length > 0) sentenceQueue.push(sp.trim());
+        });
+      } else {
+        sentenceQueue.push(chunk);
+      }
+    });
 
-    // Android WebView Fix 3: save reference to prevent garbage collection mid-speech
-    window.__agriUtterance = utterance;
+    if (sentenceQueue.length === 0) return;
 
-    // Find best voice if available
+    window.__agriSpeechQueue = sentenceQueue;
+    window.__agriSpeechIndex = 0;
+    setIsPlayingAudio(true);
+
     const voices = window.speechSynthesis.getVoices();
-    if (voices && voices.length > 0) {
-      const matchPrefix = lang === 'hi' ? 'hi' : 'en';
-      const matchedVoice = voices.find(v => v.lang.toLowerCase().startsWith(matchPrefix));
+    const matchPrefix = lang === 'hi' ? 'hi' : 'en';
+    const matchedVoice = voices?.find(v => v.lang.toLowerCase().startsWith(matchPrefix));
+
+    const playNextChunk = () => {
+      if (window.__agriSpeechStopRequested) {
+        setIsPlayingAudio(false);
+        window.__agriSpeechQueue = [];
+        return;
+      }
+
+      if (window.__agriSpeechIndex >= window.__agriSpeechQueue.length) {
+        setIsPlayingAudio(false);
+        window.__agriUtterance = null;
+        window.__agriSpeechQueue = [];
+        return;
+      }
+
+      const currentText = window.__agriSpeechQueue[window.__agriSpeechIndex];
+      const utterance = new SpeechSynthesisUtterance(currentText);
+      utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+
       if (matchedVoice) {
         utterance.voice = matchedVoice;
       }
-    }
 
-    utterance.onstart = () => {
-      setIsPlayingAudio(true);
-    };
+      // Keep utterance in global window object to prevent V8 GC from stopping speech mid-sentence
+      window.__agriUtterance = utterance;
 
-    utterance.onend = () => {
-      setIsPlayingAudio(false);
-      window.__agriUtterance = null;
-    };
+      utterance.onend = () => {
+        window.__agriSpeechIndex += 1;
+        playNextChunk();
+      };
 
-    utterance.onerror = (e) => {
-      console.warn('Speech synthesis error:', e);
-      setIsPlayingAudio(false);
-      window.__agriUtterance = null;
-    };
+      utterance.onerror = (err) => {
+        console.warn('Speech chunk error, advancing to next sentence:', err);
+        window.__agriSpeechIndex += 1;
+        playNextChunk();
+      };
 
-    window.speechSynthesis.speak(utterance);
-    setIsPlayingAudio(true);
-
-    // Android WebView Fix 4: keepalive interval so speech doesn't pause after 15s
-    const keepAlive = setInterval(() => {
-      if (!window.speechSynthesis.speaking) {
-        clearInterval(keepAlive);
-      } else {
-        window.speechSynthesis.pause();
-        window.speechSynthesis.resume();
+      try {
+        window.speechSynthesis.speak(utterance);
+      } catch (err) {
+        console.warn('Speech synthesis speak error:', err);
+        setIsPlayingAudio(false);
       }
-    }, 4500);
+    };
+
+    // Play first sentence chunk
+    playNextChunk();
   };
 
   // Fix 7: Enforce login before starting camera
@@ -783,100 +812,6 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
   return (
     <div style={{ maxWidth: '1280px', margin: '1rem auto 3rem auto', padding: '0 1rem' }}>
       
-      {/* Top Header Card - Deep Agricultural Forest Green from Screenshot 1 */}
-      <div style={{
-        padding: '1.25rem 1.75rem',
-        marginBottom: '1.25rem',
-        background: '#123924',
-        borderRadius: '20px',
-        border: '1px solid rgba(255, 255, 255, 0.12)',
-        boxShadow: '0 4px 20px rgba(18, 57, 36, 0.15)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '1rem'
-      }}>
-        {/* Weather & Location Chip */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.15)',
-            border: '1px solid rgba(255, 255, 255, 0.25)',
-            padding: '0.45rem 1rem',
-            borderRadius: '999px',
-            fontSize: '0.85rem',
-            color: '#ffffff',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <Sun size={17} color="#fde047" />
-            <span>Noida · 28°C · Clear</span>
-          </div>
-
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.15)',
-            border: '1px solid rgba(255, 255, 255, 0.25)',
-            padding: '0.45rem 0.9rem',
-            borderRadius: '999px',
-            fontSize: '0.82rem',
-            color: '#bbf7d0',
-            fontWeight: 700
-          }}>
-            {user?.name ? user.name : 'Farmer Partner'}
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-          {onNavigateFarm && (
-            <button
-              onClick={onNavigateFarm}
-              style={{
-                background: 'rgba(255, 255, 255, 0.18)',
-                color: '#ffffff',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                padding: '0.45rem 1rem',
-                borderRadius: '999px',
-                fontWeight: 700,
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <Sprout size={16} color="#86efac" />
-              <span>{lang === 'hi' ? 'मेरा खेत व शेड्यूल' : 'My Farm & Schedule'}</span>
-            </button>
-          )}
-
-          {/* Dual Language Switcher: अ / A */}
-          <button
-            onClick={() => setLang(lang === 'hi' ? 'en' : 'hi')}
-            style={{
-              background: 'rgba(255, 255, 255, 0.2)',
-              color: '#ffffff',
-              border: '1px solid rgba(255, 255, 255, 0.35)',
-              padding: '0.45rem 1.1rem',
-              borderRadius: '999px',
-              fontWeight: 800,
-              fontSize: '0.92rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <span style={{ fontSize: '1.1rem', fontWeight: 900 }}>{lang === 'hi' ? 'अ' : 'A'}</span>
-            <span style={{ fontSize: '0.8rem', opacity: 0.9 }}>/ {lang === 'hi' ? 'English' : 'हिंदी'}</span>
-          </button>
-        </div>
-      </div>
 
       {/* Fix 7: Mandatory Login Warning Banner if user is not signed in */}
       {!user && (

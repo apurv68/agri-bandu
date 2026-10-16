@@ -1,30 +1,62 @@
 import React from 'react';
-import { Sprout, ShieldAlert, CloudSun, UserCheck, LogIn, LogOut, Globe } from 'lucide-react';
+import { Menu, Globe, LogIn, LogOut, User } from 'lucide-react';
 import { TRANSLATIONS } from '../translations';
 
-export default function Navbar({ activePage, setActivePage, user, onOpenAuth, onLogout, lang, setLang }) {
+export default function Navbar({ 
+  activePage, 
+  setActivePage, 
+  user, 
+  onOpenAuth, 
+  onLogout, 
+  lang, 
+  setLang,
+  onToggleSidebar 
+}) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.hi;
 
   return (
-    <header style={{
+    <header className="agri-topbar" style={{
       position: 'sticky',
       top: 0,
-      zIndex: 100,
-      background: '#123924',
-      borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
-      boxShadow: '0 4px 20px rgba(18, 57, 36, 0.15)',
-      padding: '0.85rem 1.5rem',
+      zIndex: 99,
+      background: 'rgba(18, 57, 36, 0.96)',
+      backdropFilter: 'blur(12px)',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+      padding: '0.65rem 1rem',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      boxShadow: '0 2px 12px rgba(0, 0, 0, 0.2)'
     }}>
-      <div style={{
-        maxWidth: '1300px',
-        margin: '0 auto',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '1rem',
-      }}>
-        {/* Brand Logo */}
+      {/* Left: Slide-in Tools Menu Toggle + Original Brand */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+        <button
+          onClick={onToggleSidebar}
+          className="hamburger-btn"
+          aria-label={lang === 'hi' ? 'नेविगेशन टूल्स खोलें' : 'Open Navigation Tools'}
+          title={lang === 'hi' ? 'नेविगेशन टूल्स (स्लाइड इन)' : 'Navigation Tools (Slide In)'}
+          style={{
+            background: 'rgba(255, 255, 255, 0.12)',
+            border: '1px solid rgba(255, 255, 255, 0.22)',
+            color: '#ffffff',
+            borderRadius: '12px',
+            padding: '0.45rem 0.75rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            transition: 'all 0.2s ease',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+          }}
+        >
+          <Menu size={20} color="#86efac" />
+          <span className="tools-btn-label" style={{ color: '#ffffff', fontWeight: 700 }}>
+            {lang === 'hi' ? 'टूल्स' : 'Tools'}
+          </span>
+        </button>
+
         <div 
           onClick={() => setActivePage('detector')}
           style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}
@@ -33,201 +65,113 @@ export default function Navbar({ activePage, setActivePage, user, onOpenAuth, on
             src="/agri-logo.png" 
             alt="Agri Bandhu Logo" 
             style={{
-              width: '42px',
-              height: '42px',
+              width: '40px',
+              height: '40px',
               borderRadius: '12px',
               objectFit: 'cover',
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.25)',
-              border: '2px solid rgba(255, 255, 255, 0.2)',
+              border: '2px solid rgba(134, 239, 172, 0.45)',
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.3)'
             }} 
           />
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#ffffff', margin: 0, letterSpacing: '-0.02em' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
                 Agri<span style={{ color: '#86efac' }}>Bandhu</span>
-              </h1>
+              </span>
               <span style={{
-                fontSize: '0.65rem',
-                background: 'rgba(255, 255, 255, 0.18)',
-                color: '#ffffff',
-                padding: '0.15rem 0.55rem',
+                fontSize: '0.62rem',
+                background: 'rgba(134, 239, 172, 0.18)',
+                color: '#86efac',
+                padding: '0.12rem 0.5rem',
                 borderRadius: '999px',
-                fontWeight: 700,
-                border: '1px solid rgba(255, 255, 255, 0.25)',
+                fontWeight: 800,
+                border: '1px solid rgba(134, 239, 172, 0.35)',
+                letterSpacing: '0.02em'
               }}>
-                {t.navVersion}
+                v2.5
               </span>
             </div>
-            <p style={{ fontSize: '0.74rem', color: '#bbf7d0', margin: 0, opacity: 0.9 }}>
-              {t.navSubtitle}
+            <p className="agri-nav-subtitle" style={{ margin: 0, fontSize: '0.72rem', color: '#bbf7d0', opacity: 0.9, fontWeight: 500, lineHeight: 1.2 }}>
+              {t.navSubtitle || (lang === 'hi' ? 'एआई फसल स्वास्थ्य एवं स्मार्ट कृषि सलाहकार' : 'AI Plant Health & Smart Farmer Advisory')}
             </p>
           </div>
         </div>
+      </div>
 
-        {/* Navigation Links */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <button
-            onClick={() => setActivePage('detector')}
-            style={{
-              padding: '0.55rem 1.1rem',
-              borderRadius: '12px',
-              border: activePage === 'detector' ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid transparent',
-              background: activePage === 'detector' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-              color: '#ffffff',
-              fontSize: '0.88rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <ShieldAlert size={17} />
-            <span>{t.navDetector}</span>
-          </button>
+      {/* Right Controls: Language Switcher & User Avatar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        {/* Quick Language Toggle */}
+        <button
+          onClick={() => setLang(lang === 'hi' ? 'en' : 'hi')}
+          title="भाषा बदलें / Change Language"
+          style={{
+            background: 'rgba(255, 255, 255, 0.12)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            color: '#ffffff',
+            padding: '0.35rem 0.65rem',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            fontSize: '0.8rem',
+            fontWeight: 700
+          }}
+        >
+          <Globe size={15} color="#86efac" />
+          <span style={{ color: '#86efac' }}>{lang === 'hi' ? 'अ' : 'A'}</span>
+        </button>
 
-          <button
-            onClick={() => setActivePage('weather')}
-            style={{
-              padding: '0.55rem 1.1rem',
-              borderRadius: '12px',
-              border: activePage === 'weather' ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid transparent',
-              background: activePage === 'weather' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-              color: activePage === 'weather' ? '#ffffff' : '#d1e7dd',
-              fontSize: '0.88rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <CloudSun size={17} />
-            <span>{t.navWeather}</span>
-          </button>
-
-          <button
-            onClick={() => setActivePage('farm')}
-            style={{
-              padding: '0.55rem 1.1rem',
-              borderRadius: '12px',
-              border: activePage === 'farm' ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid transparent',
-              background: activePage === 'farm' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-              color: '#ffffff',
-              fontSize: '0.88rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <Sprout size={17} />
-            <span>{t.navFarm}</span>
-          </button>
-
-          <button
+        {/* User Pill / Login Button */}
+        {user ? (
+          <div 
             onClick={() => setActivePage('auth')}
             style={{
-              padding: '0.55rem 1.1rem',
-              borderRadius: '12px',
-              border: activePage === 'auth' ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid transparent',
-              background: activePage === 'auth' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-              color: activePage === 'auth' ? '#ffffff' : '#d1e7dd',
-              fontSize: '0.88rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <UserCheck size={17} />
-            <span>{t.navUser}</span>
-          </button>
-        </nav>
-
-        {/* Global Controls: Language Switcher & User Auth Action Button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          
-          {/* Global Language Switcher Button (Available on Every Page) */}
-          <button
-            onClick={() => setLang(lang === 'hi' ? 'en' : 'hi')}
-            title="भाषा बदलें / Change Language"
-            style={{
-              background: 'rgba(255, 255, 255, 0.12)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              color: '#ffffff',
-              padding: '0.45rem 0.9rem',
-              borderRadius: '12px',
-              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '0.45rem',
-              fontSize: '0.85rem',
-              fontWeight: 700,
-              transition: 'all 0.2s ease',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+              background: 'rgba(16, 185, 129, 0.2)',
+              border: '1px solid rgba(134, 239, 172, 0.35)',
+              padding: '0.3rem 0.65rem',
+              borderRadius: '10px',
+              cursor: 'pointer'
             }}
           >
-            <Globe size={16} color="#86efac" />
-            <span style={{ color: '#86efac', fontWeight: 900 }}>{lang === 'hi' ? 'अ' : 'A'}</span>
-            <span style={{ opacity: 0.9 }}>/ {lang === 'hi' ? 'English' : 'हिंदी'}</span>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#86efac' }} />
+            <span style={{ 
+              fontSize: '0.82rem', 
+              fontWeight: 700, 
+              color: '#ffffff',
+              maxWidth: '80px',
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis',
+              overflow: 'hidden'
+            }}>
+              {user.name.split(' ')[0]}
+            </span>
+          </div>
+        ) : (
+          <button
+            onClick={onOpenAuth}
+            style={{
+              background: '#10b981',
+              color: '#ffffff',
+              border: 'none',
+              padding: '0.38rem 0.85rem',
+              borderRadius: '10px',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem'
+            }}
+          >
+            <LogIn size={15} />
+            <span>{lang === 'hi' ? 'लॉगिन' : 'Login'}</span>
           </button>
-
-          {user ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.15)',
-                border: '1px solid rgba(255, 255, 255, 0.25)',
-                padding: '0.35rem 0.85rem',
-                borderRadius: '10px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#86efac' }} />
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
-                  {user.name}
-                </span>
-              </div>
-
-              <button
-                onClick={onLogout}
-                title={t.navLogout}
-                style={{
-                  background: 'rgba(239, 68, 68, 0.2)',
-                  border: '1px solid rgba(239, 68, 68, 0.4)',
-                  color: '#fca5a5',
-                  padding: '0.5rem',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                <LogOut size={17} />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={onOpenAuth}
-              className="btn-amber"
-              style={{ fontSize: '0.86rem', padding: '0.55rem 1.2rem', borderRadius: '12px' }}
-            >
-              <LogIn size={16} />
-              <span>{t.navLogin}</span>
-            </button>
-          )}
-        </div>
+        )}
       </div>
     </header>
   );
 }
-
