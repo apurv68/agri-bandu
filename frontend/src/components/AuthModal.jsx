@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { authService } from '../services/api';
 import { TRANSLATIONS } from '../translations';
+import { Capacitor } from '@capacitor/core';
 
 export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.hi;
@@ -115,8 +116,11 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
   // Official Google OAuth 2.0 Direct Sign-In
   const redirectToGoogleOAuth = () => {
     setLoading(true);
-    let redirectUri = window.location.origin + '/api/auth/google/callback';
-    if (redirectUri.includes('localhost') && !redirectUri.includes(':3000')) {
+    let redirectUri = Capacitor.isNativePlatform()
+      ? 'https://agri-bandhu.onrender.com/api/auth/google/callback'
+      : (window.location.origin + '/api/auth/google/callback');
+
+    if (redirectUri.includes('localhost:3000')) {
       redirectUri = 'http://localhost:3000/api/auth/google/callback';
     }
     const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({
