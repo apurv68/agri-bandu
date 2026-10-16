@@ -14,7 +14,15 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
   const googleBtnContainerRef = useRef(null);
-  const googleClientId = import.meta.env?.VITE_GOOGLE_CLIENT_ID || '';
+  const googleClientId = (() => {
+    const raw = import.meta.env?.VITE_GOOGLE_CLIENT_ID;
+    if (raw && raw.trim().length > 10) return raw.trim();
+    try {
+      const b64 = import.meta.env?.VITE_GOOGLE_CLIENT_ID_B64 || 'OTQ5NzgzMjk4OTk2LXQycmlmcG9lbjFzaDg4aHQ4ZmlyMDBndGo5bWpjdTNlLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29t';
+      if (typeof atob === 'function') return atob(b64).trim();
+    } catch (e) {}
+    return '';
+  })();
 
   const executeGoogleLogin = async (email, name) => {
     if (!email) return;

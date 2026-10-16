@@ -8,5 +8,4 @@ node_modules/
 .env.*
 *.log
 *.apk
-backend/public/assets/
 backend/public/uploads/
