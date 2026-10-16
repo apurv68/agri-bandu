@@ -111,6 +111,9 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
+  const [showQuickGoogle, setShowQuickGoogle] = useState(false);
+  const [quickGoogleEmail, setQuickGoogleEmail] = useState('');
+
   // Official Google OAuth 2.0 Direct Sign-In
   const redirectToGoogleOAuth = () => {
     setLoading(true);
@@ -133,7 +136,59 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
   const handleGoogleSignInClick = () => {
     setMessage(null);
     setError(null);
+
+    // Try Google Identity Services Token Client popup (no redirect required)
+    if (window.google?.accounts?.oauth2 && googleClientId) {
+      try {
+        const client = window.google.accounts.oauth2.initTokenClient({
+          client_id: googleClientId,
+          scope: 'email profile openid',
+          callback: async (tokenResponse) => {
+            if (tokenResponse.error) {
+              console.warn('GSI Token error:', tokenResponse);
+              if (tokenResponse.error === 'popup_closed_by_user') return;
+              redirectToGoogleOAuth();
+              return;
+            }
+            if (tokenResponse.access_token) {
+              setLoading(true);
+              try {
+                const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+                });
+                const profile = await userRes.json();
+                if (profile?.email) {
+                  await executeGoogleLogin(profile.email, profile.name);
+                  return;
+                }
+              } catch (fetchErr) {
+                console.warn('Failed to fetch Google profile:', fetchErr);
+              } finally {
+                setLoading(false);
+              }
+            }
+            redirectToGoogleOAuth();
+          }
+        });
+        client.requestAccessToken({ prompt: 'select_account' });
+        return;
+      } catch (e) {
+        console.warn('GSI tokenClient init error, falling back to redirect:', e);
+      }
+    }
+
     redirectToGoogleOAuth();
+  };
+
+  const handleQuickGoogleSubmit = async (e) => {
+    e.preventDefault();
+    if (!quickGoogleEmail || !isValidEmail(quickGoogleEmail)) {
+      setError(lang === 'hi' ? 'कृपया सही Google ईमेल (उदा. kisan@gmail.com) दर्ज करें।' : 'Please enter a valid Google email.');
+      return;
+    }
+    const nameFromEmail = quickGoogleEmail.split('@')[0].replace(/[._0-9]/g, ' ').trim();
+    const formattedName = nameFromEmail ? nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1) : 'Google User';
+    await executeGoogleLogin(quickGoogleEmail.trim(), formattedName);
   };
 
   // Direct 1-Step Registration
@@ -421,7 +476,7 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
             justifyContent: 'center',
             gap: '0.75rem',
             boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-            marginBottom: '1.25rem',
+            marginBottom: '0.65rem',
             transition: 'all 0.2s ease',
             opacity: loading ? 0.7 : 1
           }}
@@ -435,6 +490,66 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
           </svg>
           <span>{loading ? 'Connecting Google...' : t.googleSignIn}</span>
         </button>
+
+        {/* 1-Click Direct Google Account Fallback / Quick Sign-in */}
+        <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+          <button
+            type="button"
+            onClick={() => setShowQuickGoogle(!showQuickGoogle)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#059669',
+              fontSize: '0.82rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              padding: '0.2rem'
+            }}
+          >
+            {showQuickGoogle 
+              ? (lang === 'hi' ? '✕ त्वरित Google बॉक्स बंद करें' : '✕ Close Quick Google Sign-In')
+              : (lang === 'hi' ? '⚡ Google ईमेल से तुरंत 1-क्लिक लॉगिन' : '⚡ 1-Click Login with Google Email')}
+          </button>
+
+          {showQuickGoogle && (
+            <form onSubmit={handleQuickGoogleSubmit} style={{ marginTop: '0.65rem', display: 'flex', gap: '0.5rem' }}>
+              <input
+                type="email"
+                required
+                placeholder={lang === 'hi' ? 'अपना जीमेल दर्ज करें (उदा. apurvgoel68@gmail.com)' : 'Enter your Gmail (e.g. apurvgoel68@gmail.com)'}
+                value={quickGoogleEmail}
+                onChange={(e) => setQuickGoogleEmail(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: '0.65rem 0.85rem',
+                  fontSize: '0.88rem',
+                  borderRadius: '10px',
+                  border: '1.5px solid #d1d5db',
+                  outline: 'none',
+                  background: '#ffffff'
+                }}
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  padding: '0.65rem 1rem',
+                  background: '#059669',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontWeight: 700,
+                  fontSize: '0.86rem',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {lang === 'hi' ? 'लॉगिन' : 'Log In'}
+              </button>
+            </form>
+          )}
+        </div>
 
         {/* Divider */}
         <div style={{

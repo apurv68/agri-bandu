@@ -928,40 +928,6 @@ export default function DiseaseDetector({ user, onNavigateFarm, onOpenAuth, lang
         </div>
       )}
 
-      {/* Seasonal Alert Banner (from Screenshot 2 - Warm Amber Pill) */}
-      <div style={{
-        background: '#fffbeb',
-        border: '1px solid #fde68a',
-        borderRadius: '16px',
-        padding: '0.9rem 1.35rem',
-        marginBottom: '1.5rem',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.85rem',
-        boxShadow: '0 2px 10px rgba(245, 158, 11, 0.08)'
-      }}>
-        <div style={{
-          width: '36px',
-          height: '36px',
-          borderRadius: '10px',
-          background: '#fef3c7',
-          border: '1px solid #fde68a',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0
-        }}>
-          <AlertTriangle size={20} color="#d97706" />
-        </div>
-        <div>
-          <div style={{ color: '#b45309', fontWeight: 800, fontSize: '0.92rem', letterSpacing: '0.01em' }}>
-            {t.alertTitle}: Early/Late Blight (झुलसा रोग)
-          </div>
-          <div style={{ color: '#92400e', fontSize: '0.84rem', marginTop: '0.1rem' }}>
-            {t.alertText}
-          </div>
-        </div>
-      </div>
 
       {/* Main Grid: Left Scanner & Right Diagnosis Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '2rem' }}>
