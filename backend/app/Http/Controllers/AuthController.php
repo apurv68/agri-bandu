@@ -276,10 +276,82 @@ class AuthController extends Controller
         }
 
         if (!$code) {
-            if ($isApk) {
-                return redirect('agribandhu://auth?error=' . urlencode('No authorization code received from Google.'));
+            $html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Google Sign-In - Agri Bandhu</title>
+</head>
+<body style="font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f0fdf4;">
+    <div style="text-align: center; padding: 2rem; background: #ffffff; border-radius: 18px; box-shadow: 0 10px 25px rgba(0,0,0,0.06); max-width: 360px; width: 85%;">
+        <div style="width: 52px; height: 52px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+        </div>
+        <h3 style="color: #14532d; margin: 0 0 0.5rem 0;">Verifying Account...</h3>
+        <p style="color: #6b7280; font-size: 0.9rem; margin: 0;">Logging you into Agri Bandhu, please wait.</p>
+    </div>
+    <script>
+        (async function() {
+            try {
+                const hash = window.location.hash.startsWith("#") ? window.location.hash.substring(1) : window.location.hash;
+                const params = new URLSearchParams(hash);
+                const searchParams = new URLSearchParams(window.location.search);
+                const accessToken = params.get("access_token") || searchParams.get("access_token");
+                const isApk = searchParams.get("state") === "apk" || params.get("state") === "apk" || ' . ($isApk ? 'true' : 'false') . ';
+
+                if (!accessToken) {
+                    const err = params.get("error") || searchParams.get("error");
+                    if (err) {
+                        window.location.href = isApk ? ("agribandhu://auth?error=" + encodeURIComponent(err)) : ("/?error=" + encodeURIComponent(err));
+                        return;
+                    }
+                    window.location.href = isApk ? "agribandhu://auth?error=Missing+Google+Access+Token" : "/?error=Missing+Google+Access+Token";
+                    return;
+                }
+
+                const profileRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+                    headers: { "Authorization": "Bearer " + accessToken }
+                });
+                const profile = await profileRes.json();
+
+                if (!profile || !profile.email) {
+                    throw new Error("Unable to read Google email profile");
+                }
+
+                const loginRes = await fetch("/api/google-login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                    body: JSON.stringify({
+                        email: profile.email,
+                        name: profile.name || profile.email.split("@")[0],
+                        role: "Farmer"
+                    })
+                });
+                const loginData = await loginRes.json();
+
+                if (loginData && loginData.success && loginData.user) {
+                    const b64User = btoa(JSON.stringify(loginData.user));
+                    const token = loginData.token || "";
+                    if (isApk) {
+                        window.location.href = "agribandhu://auth?google_auth=success&token=" + token + "&user=" + encodeURIComponent(b64User);
+                    } else {
+                        window.location.href = "/?google_auth=success&token=" + token + "&user=" + encodeURIComponent(b64User);
+                    }
+                } else {
+                    throw new Error((loginData && loginData.message) || "Authentication failed");
+                }
+            } catch(e) {
+                const isApk = ' . ($isApk ? 'true' : 'false') . ';
+                window.location.href = isApk ? ("agribandhu://auth?error=" + encodeURIComponent(e.message)) : ("/?error=" + encodeURIComponent(e.message));
             }
-            return redirect($frontendOrigin . '/?error=' . urlencode('No authorization code received from Google.'));
+        })();
+    </script>
+</body>
+</html>';
+            return response($html, 200)->header('Content-Type', 'text/html');
         }
 
         try {

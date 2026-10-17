@@ -127,9 +127,8 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
     const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({
       client_id: googleClientId,
       redirect_uri: redirectUri,
-      response_type: 'code',
+      response_type: 'token',
       scope: 'openid email profile',
-      access_type: 'offline',
       prompt: 'select_account'
     }).toString();
 
@@ -147,10 +146,9 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
         const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({
           client_id: googleClientId,
           redirect_uri: 'https://agri-bandhu.onrender.com/api/auth/google/callback',
-          response_type: 'code',
+          response_type: 'token',
           scope: 'openid email profile',
           state: 'apk',
-          access_type: 'offline',
           prompt: 'select_account'
         }).toString();
 
