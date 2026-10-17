@@ -6,6 +6,7 @@ import {
 import { authService } from '../services/api';
 import { TRANSLATIONS } from '../translations';
 import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 
 export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.hi;
@@ -135,11 +136,35 @@ export default function AuthModal({ user, setUser, onScanRedirect, lang = 'hi' }
     window.location.href = googleAuthUrl;
   };
 
-  const handleGoogleSignInClick = () => {
+  const handleGoogleSignInClick = async () => {
     setMessage(null);
     setError(null);
 
-    // Try Google Identity Services Token Client popup (no redirect required)
+    // 1. Native Android APK: Open official Google OAuth with deep-link return
+    if (Capacitor.isNativePlatform()) {
+      setLoading(true);
+      try {
+        const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({
+          client_id: googleClientId,
+          redirect_uri: 'https://agri-bandhu.onrender.com/api/auth/google/callback',
+          response_type: 'code',
+          scope: 'openid email profile',
+          state: 'apk',
+          access_type: 'offline',
+          prompt: 'select_account'
+        }).toString();
+
+        await Browser.open({ url: googleAuthUrl, windowName: '_system' });
+      } catch (err) {
+        console.warn('Native Browser open error:', err);
+        redirectToGoogleOAuth();
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // 2. Web Browser: Use standard Google Identity Services token client
     if (window.google?.accounts?.oauth2 && googleClientId) {
       try {
         const client = window.google.accounts.oauth2.initTokenClient({

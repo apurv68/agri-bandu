@@ -7,6 +7,8 @@ import WeatherAndCrops from './components/WeatherAndCrops';
 import FarmManager from './components/FarmManager';
 import { authService } from './services/api';
 import { Sprout, ShieldCheck, Heart, AlertTriangle } from 'lucide-react';
+import { App as CapApp } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -77,31 +79,80 @@ export default function App() {
   }, [lang]);
 
   useEffect(() => {
-    // Check if URL contains Google OAuth redirect parameters
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const isGoogleAuth = urlParams.get('google_auth');
-      const token = urlParams.get('token');
-      const rawUser = urlParams.get('user');
-
-      if (isGoogleAuth === 'success' && rawUser) {
-        const decodedUser = JSON.parse(atob(decodeURIComponent(rawUser)));
-        if (token) {
-          localStorage.setItem('agri_auth_token', token);
+    // Process OAuth URL parameters (for both Web query params and APK deep links)
+    const handleAuthUrl = async (urlString) => {
+      try {
+        if (!urlString) return;
+        let queryPart = '';
+        if (urlString.includes('?')) {
+          queryPart = urlString.split('?')[1];
+        } else if (window.location.search) {
+          queryPart = window.location.search.substring(1);
         }
-        localStorage.setItem('agri_user', JSON.stringify(decodedUser));
-        setUser(decodedUser);
-        setActivePage('detector');
-        window.history.replaceState({}, document.title, window.location.pathname);
+
+        if (!queryPart) return;
+        const urlParams = new URLSearchParams(queryPart);
+        const isGoogleAuth = urlParams.get('google_auth');
+        const token = urlParams.get('token');
+        const rawUser = urlParams.get('user');
+        const authError = urlParams.get('error');
+
+        if (authError) {
+          try {
+            await Browser.close();
+          } catch (e) {}
+          alert('Google Sign-In: ' + authError);
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+          return;
+        }
+
+        if (isGoogleAuth === 'success' && rawUser) {
+          const decodedUser = JSON.parse(atob(decodeURIComponent(rawUser)));
+          if (token) {
+            localStorage.setItem('agri_auth_token', token);
+          }
+          localStorage.setItem('agri_user', JSON.stringify(decodedUser));
+          setUser(decodedUser);
+          setActivePage('detector');
+          try {
+            await Browser.close();
+          } catch (e) {}
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        }
+      } catch (err) {
+        console.warn('OAuth URL parse error:', err);
       }
-    } catch (err) {
-      console.warn('OAuth URL parse error:', err);
-    }
+    };
+
+    // 1. Check web browser URL on initial load
+    handleAuthUrl(window.location.href);
+
+    // 2. Listen for native Android deep link returns (agribandhu://auth?google_auth=success...)
+    let appUrlListener = null;
+    try {
+      CapApp.addListener('appUrlOpen', async (data) => {
+        if (data?.url && data.url.includes('agribandhu://auth')) {
+          await handleAuthUrl(data.url);
+        }
+      }).then((listener) => {
+        appUrlListener = listener;
+      });
+    } catch (e) {}
 
     const currentUser = authService.getCurrentUser();
     if (currentUser) {
       setUser(currentUser);
     }
+
+    return () => {
+      if (appUrlListener?.remove) {
+        appUrlListener.remove();
+      }
+    };
   }, []);
 
   const handleLogout = async () => {

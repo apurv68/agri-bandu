@@ -349,7 +349,8 @@ export default function WeatherAndCrops({ lang = 'hi' }) {
 
       if (geoData && geoData.results && geoData.results.length > 0) {
         const place = geoData.results[0];
-        const region = place.admin1 ? `${place.name}, ${place.admin1}, India` : `${place.name}, India`;
+        const country = place.country || 'India';
+        const region = place.admin1 ? `${place.name}, ${place.admin1}, ${country}` : `${place.name}, ${country}`;
         await fetchWeatherByCoords(place.latitude, place.longitude, place.name, region);
         return;
       }
@@ -357,28 +358,12 @@ export default function WeatherAndCrops({ lang = 'hi' }) {
       console.warn('Geocoding fallback:', err);
     }
 
-    // Default fallback if offline or not found
-    let hash = 0;
-    for (let i = 0; i < cleanCity.length; i++) hash += cleanCity.charCodeAt(i);
-    const temp = 24 + (hash % 10);
-    const humidity = 55 + (hash % 30);
-    const rainProb = (hash % 60) + '%';
-    const wind = (10 + (hash % 10)) + ' km/h';
-    const alertMsg = generateFarmingAdvisory(cleanCity, temp, humidity, rainProb);
-
-    setDisplayCity(cleanCity);
-    setLocationSubtext(`${cleanCity}, India`);
-    setCurrentWeather({
-      temp,
-      humidity,
-      condition: lang === 'hi' ? 'साफ एवं खिली धूप' : 'Clear Sunny Sky',
-      wind,
-      rainChance: rainProb,
-      uv: 7,
-      state: `${cleanCity}, Region`,
-      alert: alertMsg
-    });
+    // If geocoding failed or city does not exist, reject fake input
     setLoading(false);
+    alert(lang === 'hi' 
+      ? `"${cleanCity}" स्थान नहीं मिला। कृपया किसी मान्य शहर या ज़िले का सही नाम दर्ज करें (उदा. Lucknow, Bhopal, Patna, Indore)।`
+      : `Location "${cleanCity}" not found. Please enter a valid city or district (e.g. Lucknow, Bhopal, Patna, Indore).`
+    );
   };
 
   const handleSearchSubmit = (e) => {

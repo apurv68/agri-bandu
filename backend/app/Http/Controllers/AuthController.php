@@ -263,21 +263,31 @@ class AuthController extends Controller
     {
         $code = $request->query('code');
         $error = $request->query('error');
+        $state = $request->query('state');
+        $isApk = ($state === 'apk');
         $currentOrigin = $request->getSchemeAndHttpHost();
         $frontendOrigin = env('FRONTEND_URL', $currentOrigin ?: 'http://localhost:3000');
 
         if ($error) {
+            if ($isApk) {
+                return redirect('agribandhu://auth?error=' . urlencode($error));
+            }
             return redirect($frontendOrigin . '/?error=' . urlencode($error));
         }
 
         if (!$code) {
+            if ($isApk) {
+                return redirect('agribandhu://auth?error=' . urlencode('No authorization code received from Google.'));
+            }
             return redirect($frontendOrigin . '/?error=' . urlencode('No authorization code received from Google.'));
         }
 
         try {
             $clientId = env('GOOGLE_CLIENT_ID');
             $clientSecret = env('GOOGLE_CLIENT_SECRET');
-            $redirectUri = env('GOOGLE_REDIRECT_URI', ($currentOrigin ?: 'http://localhost:3000') . '/api/auth/google/callback');
+            $redirectUri = $isApk 
+                ? 'https://agri-bandhu.onrender.com/api/auth/google/callback'
+                : env('GOOGLE_REDIRECT_URI', ($currentOrigin ?: 'http://localhost:3000') . '/api/auth/google/callback');
 
             // Exchange authorization code with Google for tokens (bypass Windows missing local CA cert check)
             $response = Http::withoutVerifying()->asForm()->post('https://oauth2.googleapis.com/token', [
@@ -289,13 +299,20 @@ class AuthController extends Controller
             ]);
 
             if (!$response->successful()) {
-                return redirect($frontendOrigin . '/?error=' . urlencode('Google Token Exchange Failed: ' . $response->body()));
+                $errDetail = 'Google Token Exchange Failed: ' . $response->body();
+                if ($isApk) {
+                    return redirect('agribandhu://auth?error=' . urlencode($errDetail));
+                }
+                return redirect($frontendOrigin . '/?error=' . urlencode($errDetail));
             }
 
             $tokenData = $response->json();
             $accessToken = $tokenData['access_token'] ?? null;
 
             if (!$accessToken) {
+                if ($isApk) {
+                    return redirect('agribandhu://auth?error=' . urlencode('Missing Google Access Token.'));
+                }
                 return redirect($frontendOrigin . '/?error=' . urlencode('Missing Google Access Token.'));
             }
 
@@ -305,6 +322,9 @@ class AuthController extends Controller
             ])->get('https://www.googleapis.com/oauth2/v2/userinfo');
 
             if (!$userResponse->successful()) {
+                if ($isApk) {
+                    return redirect('agribandhu://auth?error=' . urlencode('Failed to fetch user profile from Google.'));
+                }
                 return redirect($frontendOrigin . '/?error=' . urlencode('Failed to fetch user profile from Google.'));
             }
 
@@ -331,9 +351,17 @@ class AuthController extends Controller
                 'role' => $user->role ?? 'Farmer',
             ]));
 
+            if ($isApk) {
+                return redirect('agribandhu://auth?google_auth=success&token=' . $token . '&user=' . urlencode($userData));
+            }
+
             return redirect($frontendOrigin . '/?google_auth=success&token=' . $token . '&user=' . urlencode($userData));
         } catch (\Exception $e) {
-            return redirect($frontendOrigin . '/?error=' . urlencode('OAuth Error: ' . $e->getMessage()));
+            $errMsg = 'OAuth Error: ' . $e->getMessage();
+            if ($isApk) {
+                return redirect('agribandhu://auth?error=' . urlencode($errMsg));
+            }
+            return redirect($frontendOrigin . '/?error=' . urlencode($errMsg));
         }
     }
 
